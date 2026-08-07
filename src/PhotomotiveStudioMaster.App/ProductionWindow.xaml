@@ -21,9 +21,10 @@
                 <TextBlock x:Name="EventText" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5,0,0" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="12,7" Margin="0,0,12,0">
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="12,7" Margin="0,0,10,0">
                     <TextBlock x:Name="AiStatusText" Text="Checking local AI..." Foreground="{StaticResource TextSecondaryBrush}" />
                 </Border>
+                <Button Content="AI RUNTIME" Width="115" Margin="0,0,10,0" Click="AiRuntime_Click" />
                 <Button Content="REFRESH DRIVES" Width="140" Click="RefreshDrives_Click" />
             </StackPanel>
         </DockPanel>
