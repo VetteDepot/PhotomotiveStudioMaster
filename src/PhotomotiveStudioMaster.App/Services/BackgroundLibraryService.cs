@@ -11,6 +11,13 @@ public sealed class BackgroundLibraryService
         ".jpg", ".jpeg", ".png", ".tif", ".tiff"
     };
 
+    private static readonly string[] DefaultCategories =
+    {
+        "Studio", "Garage", "Industrial", "Racing", "Patriotic", "Beach",
+        "Downtown", "Mountains", "Desert", "Luxury", "Carbon Fiber",
+        "Abstract", "Seasonal", "Custom"
+    };
+
     private readonly BackgroundRepository _repository = new();
 
     public string LibraryRoot { get; }
@@ -57,8 +64,8 @@ public sealed class BackgroundLibraryService
 
     public IReadOnlyList<string> GetCategories()
     {
-        var categories = _repository.GetAll()
-            .Select(x => x.Category)
+        var categories = DefaultCategories
+            .Concat(_repository.GetAll().Select(x => x.Category))
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(x => x)
