@@ -33,6 +33,22 @@ public partial class MainWindow : Window
         }
     }
 
+    private void Production_Click(object sender, RoutedEventArgs e)
+    {
+        if (_activeEvent is null)
+        {
+            MessageBox.Show(
+                "Create or resume an event before opening Production.",
+                "No Active Event",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new ProductionWindow(_activeEvent) { Owner = this };
+        window.ShowDialog();
+    }
+
     private void SetActiveEvent(EventRecord? eventRecord)
     {
         _activeEvent = eventRecord;
