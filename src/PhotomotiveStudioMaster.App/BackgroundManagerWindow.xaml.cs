@@ -12,6 +12,7 @@ public partial class BackgroundManagerWindow : Window
 {
     private readonly BackgroundLibraryService _library = new();
     private BackgroundRecord? _selected;
+    private bool _loadingSelection;
 
     public BackgroundManagerWindow()
     {
@@ -22,26 +23,29 @@ public partial class BackgroundManagerWindow : Window
 
     private void FilterChanged(object sender, EventArgs e) => RefreshLibrary();
 
+    private void CategoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (IsLoaded)
+            RefreshLibrary();
+    }
+
     private void RefreshCategories()
     {
-        var current = CategoryFilter.SelectedItem?.ToString() ?? "All";
-        CategoryFilter.ItemsSource = _library.GetCategories();
-        CategoryFilter.SelectedItem = CategoryFilter.Items.Cast<string>()
+        var current = CategoryList.SelectedItem?.ToString() ?? "All";
+        CategoryList.ItemsSource = _library.GetCategories();
+        CategoryList.SelectedItem = CategoryList.Items.Cast<string>()
             .FirstOrDefault(x => x.Equals(current, StringComparison.OrdinalIgnoreCase)) ?? "All";
     }
 
     private void RefreshLibrary()
     {
-        if (!IsLoaded && CategoryFilter.ItemsSource is null)
-            return;
-
-        var category = CategoryFilter.SelectedItem?.ToString() ?? "All";
+        var category = CategoryList.SelectedItem?.ToString() ?? "All";
         var items = _library.Filter(SearchBox.Text, category);
         BackgroundList.ItemsSource = items;
-        VisibleCountText.Text = $"{items.Count} shown";
+        VisibleCountText.Text = $"{items.Count:N0} shown";
 
         var stats = _library.GetStatistics();
-        StatsText.Text = $"{stats.Count} backgrounds  •  {stats.Favorites} favorites  •  {FormatBytes(stats.TotalBytes)}";
+        StatsText.Text = $"{stats.Count:N0} backgrounds  •  {stats.Favorites:N0} favorites  •  {FormatBytes(stats.TotalBytes)}";
     }
 
     private async void ImportBackgrounds_Click(object sender, RoutedEventArgs e)
@@ -59,11 +63,11 @@ public partial class BackgroundManagerWindow : Window
 
     private async Task ImportFilesAsync(IEnumerable<string> files)
     {
-        var category = CategoryFilter.SelectedItem?.ToString();
+        var category = CategoryList.SelectedItem?.ToString();
         if (string.IsNullOrWhiteSpace(category) || category is "All" or "Favorites" or "Recent")
             category = "Custom";
 
-        StatusText.Text = "Importing backgrounds and generating thumbnails...";
+        StatusText.Text = "Importing backgrounds and generating premium thumbnails...";
         IsEnabled = false;
         try
         {
@@ -96,15 +100,32 @@ public partial class BackgroundManagerWindow : Window
             return;
         }
 
-        NoSelectionText.Visibility = Visibility.Collapsed;
-        MetadataPanel.Visibility = Visibility.Visible;
-        ActionPanel.Visibility = Visibility.Visible;
-        NameBox.Text = _selected.Name;
-        CategoryBox.Text = _selected.Category;
-        TagsBox.Text = _selected.Tags;
-        AssetInfoText.Text = $"{_selected.StorageDisplay}  •  Added {_selected.CreatedAt:g}";
-        FavoriteButton.Content = _selected.IsFavorite ? "REMOVE FAVORITE" : "ADD FAVORITE";
-        LoadPreview(_selected.FilePath);
+        if (_selected.PixelWidth <= 0 || _selected.PixelHeight <= 0)
+            _library.RefreshImageMetadata(_selected);
+
+        _loadingSelection = true;
+        try
+        {
+            NoSelectionText.Visibility = Visibility.Collapsed;
+            MetadataPanel.Visibility = Visibility.Visible;
+            ActionPanel.Visibility = Visibility.Visible;
+            NameBox.Text = _selected.Name;
+            CategoryBox.Text = _selected.Category;
+            TagsBox.Text = _selected.Tags;
+            SelectedNameText.Text = _selected.Name;
+            SelectedSummaryText.Text = $"{_selected.Category}  •  {_selected.FavoriteGlyph} Favorite  •  {_selected.RatingDisplay}";
+            ResolutionText.Text = _selected.ResolutionDisplay;
+            AssetInfoText.Text = $"{_selected.StorageDisplay}  •  Added {_selected.CreatedAt:g}" +
+                                 (_selected.LastUsedAt is null ? string.Empty : $"  •  Last used {_selected.LastUsedAt:g}");
+            UseCountText.Text = _selected.UseCount.ToString("N0");
+            FavoriteButton.Content = _selected.IsFavorite ? "REMOVE FAVORITE" : "ADD FAVORITE";
+            RatingBox.SelectedIndex = Math.Clamp(_selected.Rating, 0, 5);
+            LoadPreview(_selected.FilePath);
+        }
+        finally
+        {
+            _loadingSelection = false;
+        }
     }
 
     private void SaveDetails_Click(object sender, RoutedEventArgs e)
@@ -125,6 +146,22 @@ public partial class BackgroundManagerWindow : Window
         StatusText.Text = $"Saved metadata for {_selected.Name}.";
         RefreshCategories();
         RefreshLibrary();
+        BackgroundList.SelectedItem = _selected;
+    }
+
+    private void RatingBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingSelection || _selected is null || RatingBox.SelectedItem is not ComboBoxItem item)
+            return;
+
+        if (int.TryParse(item.Tag?.ToString(), out var rating))
+        {
+            _selected.Rating = Math.Clamp(rating, 0, 5);
+            _library.SaveMetadata(_selected);
+            SelectedSummaryText.Text = $"{_selected.Category}  •  {_selected.FavoriteGlyph} Favorite  •  {_selected.RatingDisplay}";
+            StatusText.Text = rating == 0 ? $"Cleared rating for {_selected.Name}." : $"Rated {_selected.Name} {rating} of 5 stars.";
+            RefreshLibrary();
+        }
     }
 
     private void Favorite_Click(object sender, RoutedEventArgs e)
@@ -134,9 +171,27 @@ public partial class BackgroundManagerWindow : Window
 
         _library.ToggleFavorite(_selected);
         FavoriteButton.Content = _selected.IsFavorite ? "REMOVE FAVORITE" : "ADD FAVORITE";
+        SelectedSummaryText.Text = $"{_selected.Category}  •  {_selected.FavoriteGlyph} Favorite  •  {_selected.RatingDisplay}";
         StatusText.Text = _selected.IsFavorite
             ? $"{_selected.Name} added to Favorites."
             : $"{_selected.Name} removed from Favorites.";
+        RefreshLibrary();
+    }
+
+    private void OpenBackground_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is null || !File.Exists(_selected.FilePath))
+            return;
+
+        _library.MarkUsed(_selected);
+        UseCountText.Text = _selected.UseCount.ToString("N0");
+        AssetInfoText.Text = $"{_selected.StorageDisplay}  •  Added {_selected.CreatedAt:g}  •  Last used {_selected.LastUsedAt:g}";
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = _selected.FilePath,
+            UseShellExecute = true
+        });
+        StatusText.Text = $"Opened {_selected.Name}.";
         RefreshLibrary();
     }
 
