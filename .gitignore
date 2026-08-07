@@ -1,0 +1,16 @@
+# Visual Studio
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Build output
+artifacts/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local event data
+LocalData/
