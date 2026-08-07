@@ -1,0 +1,87 @@
+<Window x:Class="PhotomotiveStudioMaster.App.AiRuntimeManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AI Runtime Manager"
+        Width="760"
+        Height="690"
+        MinWidth="700"
+        MinHeight="620"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="AI Runtime Manager" FontSize="30" FontWeight="SemiBold" />
+            <TextBlock Text="Install, verify, and repair the local offline vehicle-extraction runtime." Margin="0,7,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,22,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="190" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock x:Name="OverallStatusText" Text="Checking AI runtime..." FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock x:Name="OverallDetailText" Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+                <Button x:Name="RefreshButton" Grid.Column="1" Content="REFRESH STATUS" Width="150" HorizontalAlignment="Right" Click="Refresh_Click" />
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Setup script" />
+                <TextBlock x:Name="InstallerStatusText" Grid.Column="1" />
+                <TextBlock Grid.Row="1" Text="Extraction worker" Margin="0,10,0,0" />
+                <TextBlock x:Name="WorkerStatusText" Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="2" Text="Python runtime" Margin="0,10,0,0" />
+                <TextBlock x:Name="PythonStatusText" Grid.Row="2" Grid.Column="1" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="3" Text="U2Net model" Margin="0,10,0,0" />
+                <TextBlock x:Name="ModelStatusText" Grid.Row="3" Grid.Column="1" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="4" Text="Offline event operation" Margin="0,10,0,0" FontWeight="SemiBold" />
+                <TextBlock x:Name="OfflineStatusText" Grid.Row="4" Grid.Column="1" Margin="0,10,0,0" FontWeight="SemiBold" />
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" Background="{StaticResource PanelAltBrush}" CornerRadius="10" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="INSTALLATION LOG" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10" />
+                <TextBox x:Name="LogBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="4" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Internet is only required during first-time installation/model download. Event-time extraction is local." VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,18,0" />
+            <Button x:Name="InstallButton" Grid.Column="1" Content="INSTALL / REPAIR AI RUNTIME" Width="210" Background="{StaticResource AccentBrush}" Click="Install_Click" />
+            <Button Grid.Column="2" Content="CLOSE" Width="95" Margin="10,0,0,0" IsCancel="True" />
+        </Grid>
+    </Grid>
+</Window>
