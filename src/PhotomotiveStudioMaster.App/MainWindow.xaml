@@ -42,8 +42,8 @@
                 <Border Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="14" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="SYSTEM" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="● Background Library Checkpoint" Foreground="{StaticResource SuccessBrush}" Margin="0,7,0,0" FontWeight="SemiBold" />
-                        <TextBlock Text="Version 0.5" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
+                        <TextBlock Text="● Live Composer Checkpoint" Foreground="{StaticResource SuccessBrush}" Margin="0,7,0,0" FontWeight="SemiBold" />
+                        <TextBlock Text="Version 0.6" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -67,51 +67,34 @@
             </DockPanel>
 
             <UniformGrid Grid.Row="1" Columns="4" Margin="0,28,0,22">
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-                    <StackPanel><TextBlock Text="Cars Today" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
-                </Border>
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-                    <StackPanel><TextBlock Text="Images Ready" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
-                </Border>
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-                    <StackPanel><TextBlock Text="Prints Sold" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
-                </Border>
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-                    <StackPanel><TextBlock Text="Revenue" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="$0.00" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
-                </Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"><StackPanel><TextBlock Text="Cars Today" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel></Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"><StackPanel><TextBlock Text="Images Ready" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel></Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"><StackPanel><TextBlock Text="Prints Sold" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel></Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"><StackPanel><TextBlock Text="Revenue" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="$0.00" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel></Border>
             </UniformGrid>
 
             <Border Grid.Row="2" Background="{StaticResource PanelBrush}" CornerRadius="14" Padding="30" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="330" />
-                    </Grid.ColumnDefinitions>
-
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="330" /></Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Center" MaxWidth="650">
-                        <TextBlock Text="Premium Background Library" FontSize="29" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text="Module 2 begins with a managed background library. Import automotive scenes, generate thumbnails automatically, organize by category and tags, mark favorites, search visually, and preview assets before they enter the Composer."
-                                   TextWrapping="Wrap"
-                                   FontSize="15"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   Margin="0,14,0,26"
-                                   LineHeight="24" />
+                        <TextBlock Text="Live Background Composer" FontSize="29" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Module 2.2 combines an extracted vehicle with any managed background in a live 8×10 landscape preview. Adjust vehicle scale, horizontal and vertical placement, and rotation, then save a print-ready 3000×2400 PNG to the event's 05_Composites folder."
+                                   TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,14,0,26" LineHeight="24" />
                         <StackPanel Orientation="Horizontal">
-                            <Button Content="BACKGROUND MANAGER" Width="200" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="BackgroundManager_Click" />
-                            <Button Content="OPEN PRODUCTION" Width="170" Margin="12,0,0,8" Click="Production_Click" />
+                            <Button Content="OPEN PRODUCTION" Width="190" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="Production_Click" />
+                            <Button Content="BACKGROUND MANAGER" Width="200" Margin="12,0,0,8" Click="BackgroundManager_Click" />
                         </StackPanel>
                     </StackPanel>
-
                     <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" CornerRadius="12" Padding="22" Margin="30,0,0,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="MODULE 2 • MILESTONE 2.1" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="✓  Managed background storage" Margin="0,18,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Automatic thumbnails" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Categories + search" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Favorites + metadata" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Drag-and-drop import" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="MODULE 2 • MILESTONE 2.2" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="✓  Background thumbnail browser" Margin="0,18,0,0" FontSize="14" />
+                            <TextBlock Text="✓  Extracted vehicle layer" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="✓  Live scale + X/Y controls" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="✓  Live rotation control" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="✓  3000×2400 PNG export" Margin="0,11,0,0" FontSize="14" />
                             <Border Background="{StaticResource InputBrush}" CornerRadius="8" Padding="12" Margin="0,22,0,0">
-                                <TextBlock Text="Next: live Background Composer workspace" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Next: interactive shadow engine + drag placement" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
                             </Border>
                         </StackPanel>
                     </Border>
