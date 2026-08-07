@@ -1,0 +1,123 @@
+<Window x:Class="PhotomotiveStudioMaster.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Photomotive Studio Master – Event Edition"
+        Width="1280"
+        Height="800"
+        MinWidth="1050"
+        MinHeight="650"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#1B2026" Padding="18">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="PHOTOMOTIVE" FontSize="20" FontWeight="Bold" />
+                    <TextBlock Text="STUDIO MASTER" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="EVENT EDITION" FontSize="11" Margin="0,4,0,0" Foreground="{StaticResource AccentBrush}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0,34,0,0">
+                    <Button Content="Dashboard" HorizontalContentAlignment="Left" Background="{StaticResource AccentBrush}" />
+                    <Button Content="Event Manager" HorizontalContentAlignment="Left" />
+                    <Button Content="Production" HorizontalContentAlignment="Left" IsEnabled="False" />
+                    <Button Content="Orders" HorizontalContentAlignment="Left" IsEnabled="False" />
+                    <Button Content="Print Queue" HorizontalContentAlignment="Left" IsEnabled="False" />
+                    <Button Content="Backgrounds" HorizontalContentAlignment="Left" IsEnabled="False" />
+                    <Button Content="Archive" HorizontalContentAlignment="Left" IsEnabled="False" />
+                    <Button Content="Settings" HorizontalContentAlignment="Left" IsEnabled="False" />
+                </StackPanel>
+
+                <Border Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="SYSTEM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="● Foundation Ready" Foreground="{StaticResource SuccessBrush}" Margin="0,6,0,0" />
+                        <TextBlock Text="Version 0.1" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left">
+                    <TextBlock Text="Dashboard" FontSize="30" FontWeight="SemiBold" />
+                    <TextBlock Text="Photomotive Studio Master – Event Edition" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5,0,0" />
+                </StackPanel>
+                <Border DockPanel.Dock="Right" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="14,8">
+                    <TextBlock Text="No active event" Foreground="{StaticResource TextSecondaryBrush}" />
+                </Border>
+            </DockPanel>
+
+            <UniformGrid Grid.Row="1" Columns="4" Margin="0,28,0,22">
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Cars Today" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="0" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Images Ready" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="0" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Prints Sold" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="0" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18">
+                    <StackPanel>
+                        <TextBlock Text="Revenue" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="$0.00" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Border Grid.Row="2" Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="28">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="320" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center" MaxWidth="600">
+                        <TextBlock Text="Event Edition Foundation" FontSize="28" FontWeight="SemiBold" />
+                        <TextBlock Text="This milestone establishes the real Windows desktop application shell. The next verified milestone will add event creation and persistent local data." TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,12,0,24" LineHeight="23" />
+                        <Button Content="CREATE NEW EVENT" Width="190" HorizontalAlignment="Left" Background="{StaticResource AccentBrush}" Click="CreateEvent_Click" />
+                    </StackPanel>
+
+                    <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" CornerRadius="10" Padding="20" Margin="28,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="MILESTONE STATUS" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="✓ .NET 8 WPF application" Margin="0,16,0,0" />
+                            <TextBlock Text="✓ Dark production interface" Margin="0,9,0,0" />
+                            <TextBlock Text="✓ Main application shell" Margin="0,9,0,0" />
+                            <TextBlock Text="✓ No third-party dependencies" Margin="0,9,0,0" />
+                            <TextBlock Text="Next: Event Manager + SQLite" Margin="0,22,0,0" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
