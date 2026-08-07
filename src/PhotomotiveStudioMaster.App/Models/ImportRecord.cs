@@ -11,4 +11,5 @@ public sealed class ImportRecord
     public long FileSize { get; set; }
     public DateTime ImportedAt { get; set; }
     public string Status { get; set; } = "Imported";
+    public string ExtractionPath { get; set; } = string.Empty;
 }
