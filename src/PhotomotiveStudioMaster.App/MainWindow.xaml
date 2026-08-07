@@ -32,9 +32,9 @@
                     <Button Content="Dashboard" HorizontalContentAlignment="Left" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" />
                     <Button Content="Event Manager" HorizontalContentAlignment="Left" Click="EventManager_Click" />
                     <Button Content="Production" HorizontalContentAlignment="Left" Click="Production_Click" />
+                    <Button Content="Background Manager" HorizontalContentAlignment="Left" Click="BackgroundManager_Click" />
                     <Button Content="Orders" HorizontalContentAlignment="Left" IsEnabled="False" />
                     <Button Content="Print Queue" HorizontalContentAlignment="Left" IsEnabled="False" />
-                    <Button Content="Backgrounds" HorizontalContentAlignment="Left" IsEnabled="False" />
                     <Button Content="Archive" HorizontalContentAlignment="Left" IsEnabled="False" />
                     <Button Content="Settings" HorizontalContentAlignment="Left" IsEnabled="False" />
                 </StackPanel>
@@ -42,8 +42,8 @@
                 <Border Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="14" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="SYSTEM" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="● Vehicle Extraction Checkpoint" Foreground="{StaticResource SuccessBrush}" Margin="0,7,0,0" FontWeight="SemiBold" />
-                        <TextBlock Text="Version 0.4" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
+                        <TextBlock Text="● Background Library Checkpoint" Foreground="{StaticResource SuccessBrush}" Margin="0,7,0,0" FontWeight="SemiBold" />
+                        <TextBlock Text="Version 0.5" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -89,29 +89,29 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel VerticalAlignment="Center" MaxWidth="650">
-                        <TextBlock Text="Automatic Vehicle Extraction" FontSize="29" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text="Sprint 4 adds a local/offline vehicle extraction worker. Imported JPEG, PNG, and TIFF jobs can now be processed into transparent PNG files stored in the event's 04_Extracted folder."
+                        <TextBlock Text="Premium Background Library" FontSize="29" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Module 2 begins with a managed background library. Import automotive scenes, generate thumbnails automatically, organize by category and tags, mark favorites, search visually, and preview assets before they enter the Composer."
                                    TextWrapping="Wrap"
                                    FontSize="15"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    Margin="0,14,0,26"
                                    LineHeight="24" />
                         <StackPanel Orientation="Horizontal">
-                            <Button Content="OPEN PRODUCTION" Width="190" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="Production_Click" />
-                            <Button Content="EVENT MANAGER" Width="160" Margin="12,0,0,8" Click="EventManager_Click" />
+                            <Button Content="BACKGROUND MANAGER" Width="200" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="BackgroundManager_Click" />
+                            <Button Content="OPEN PRODUCTION" Width="170" Margin="12,0,0,8" Click="Production_Click" />
                         </StackPanel>
                     </StackPanel>
 
                     <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" CornerRadius="12" Padding="22" Margin="30,0,0,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="SPRINT 4 CHECKPOINT" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="✓  Local AI worker integration" Margin="0,18,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Transparent PNG output" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Extraction status in SQLite" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Manual Extract Selected test" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
-                            <TextBlock Text="✓  Event 04_Extracted storage" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="MODULE 2 • MILESTONE 2.1" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="✓  Managed background storage" Margin="0,18,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Automatic thumbnails" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Categories + search" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Favorites + metadata" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Drag-and-drop import" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
                             <Border Background="{StaticResource InputBrush}" CornerRadius="8" Padding="12" Margin="0,22,0,0">
-                                <TextBlock Text="Next: automatic queue + improved vehicle model" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Next: live Background Composer workspace" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
                             </Border>
                         </StackPanel>
                     </Border>
