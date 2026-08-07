@@ -36,6 +36,28 @@ public partial class ProductionWindow : Window
         RefreshAiStatus();
     }
 
+    private void OpenComposer_Click(object sender, RoutedEventArgs e)
+    {
+        if (ImportedGrid.SelectedItem is not ImportRecord selected)
+        {
+            MessageBox.Show("Select an event job first.", "Live Composer", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(selected.ExtractionPath) || !File.Exists(selected.ExtractionPath))
+        {
+            MessageBox.Show(
+                "This job does not have an extracted vehicle yet. Run Extract Selected first.",
+                "Live Composer",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var window = new ComposerWindow(_activeEvent, selected) { Owner = this };
+        window.ShowDialog();
+    }
+
     private void RefreshDrives()
     {
         var drives = _importService.GetRemovableDrives()
@@ -184,7 +206,7 @@ public partial class ProductionWindow : Window
             RefreshImportedJobs();
             StatusText.Text = $"Vehicle extraction complete: {selected.JobNumber}";
             DetailText.Text = $"Transparent PNG saved to {result.OutputPath}";
-            ExtractionDetailText.Text = "Extraction complete. Open the extracted folder to inspect the transparent PNG.";
+            ExtractionDetailText.Text = "Extraction complete. Select the job and click Open Composer.";
         }
         catch (Exception ex)
         {
