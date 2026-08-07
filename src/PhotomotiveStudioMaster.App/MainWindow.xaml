@@ -7,13 +7,13 @@
         MinWidth="1050"
         MinHeight="650"
         WindowStartupLocation="CenterScreen">
-    <Grid>
+    <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="230" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="#1B2026" Padding="18">
+        <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" Padding="18">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -23,13 +23,13 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="PHOTOMOTIVE" FontSize="20" FontWeight="Bold" />
+                    <TextBlock Text="PHOTOMOTIVE" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
                     <TextBlock Text="STUDIO MASTER" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" />
-                    <TextBlock Text="EVENT EDITION" FontSize="11" Margin="0,4,0,0" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="EVENT EDITION" FontSize="11" Margin="0,4,0,0" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Margin="0,34,0,0">
-                    <Button Content="Dashboard" HorizontalContentAlignment="Left" Background="{StaticResource AccentBrush}" />
+                    <Button Content="Dashboard" HorizontalContentAlignment="Left" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" />
                     <Button Content="Event Manager" HorizontalContentAlignment="Left" Click="EventManager_Click" />
                     <Button Content="Production" HorizontalContentAlignment="Left" Click="Production_Click" />
                     <Button Content="Orders" HorizontalContentAlignment="Left" IsEnabled="False" />
@@ -39,17 +39,17 @@
                     <Button Content="Settings" HorizontalContentAlignment="Left" IsEnabled="False" />
                 </StackPanel>
 
-                <Border Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="12">
+                <Border Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="14" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="SYSTEM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="● Vehicle Extraction Checkpoint" Foreground="{StaticResource SuccessBrush}" Margin="0,6,0,0" />
-                        <TextBlock Text="Version 0.4" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                        <TextBlock Text="SYSTEM" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock Text="● Vehicle Extraction Checkpoint" Foreground="{StaticResource SuccessBrush}" Margin="0,7,0,0" FontWeight="SemiBold" />
+                        <TextBlock Text="Version 0.4" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-        <Grid Grid.Column="1" Margin="30">
+        <Grid Grid.Column="1" Margin="30" Background="{StaticResource AppBackgroundBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -58,41 +58,61 @@
 
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left">
-                    <TextBlock Text="Dashboard" FontSize="30" FontWeight="SemiBold" />
-                    <TextBlock Text="Photomotive Studio Master – Event Edition" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5,0,0" />
+                    <TextBlock Text="Dashboard" FontSize="32" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <TextBlock Text="Photomotive Studio Master – Event Edition" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,6,0,0" FontSize="14" />
                 </StackPanel>
-                <Border DockPanel.Dock="Right" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="14,8">
-                    <TextBlock x:Name="ActiveEventText" Text="No active event" Foreground="{StaticResource TextSecondaryBrush}" />
+                <Border DockPanel.Dock="Right" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="16,10" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <TextBlock x:Name="ActiveEventText" Text="No active event" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
                 </Border>
             </DockPanel>
 
             <UniformGrid Grid.Row="1" Columns="4" Margin="0,28,0,22">
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,0,12,0"><StackPanel><TextBlock Text="Cars Today" Foreground="{StaticResource TextSecondaryBrush}" /><TextBlock Text="0" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" /></StackPanel></Border>
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,0,12,0"><StackPanel><TextBlock Text="Images Ready" Foreground="{StaticResource TextSecondaryBrush}" /><TextBlock Text="0" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" /></StackPanel></Border>
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,0,12,0"><StackPanel><TextBlock Text="Prints Sold" Foreground="{StaticResource TextSecondaryBrush}" /><TextBlock Text="0" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" /></StackPanel></Border>
-                <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18"><StackPanel><TextBlock Text="Revenue" Foreground="{StaticResource TextSecondaryBrush}" /><TextBlock Text="$0.00" FontSize="32" FontWeight="Bold" Margin="0,6,0,0" /></StackPanel></Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <StackPanel><TextBlock Text="Cars Today" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
+                </Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <StackPanel><TextBlock Text="Images Ready" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
+                </Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <StackPanel><TextBlock Text="Prints Sold" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="0" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
+                </Border>
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <StackPanel><TextBlock Text="Revenue" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" /><TextBlock Text="$0.00" FontSize="38" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,8,0,0" /></StackPanel>
+                </Border>
             </UniformGrid>
 
-            <Border Grid.Row="2" Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="28">
+            <Border Grid.Row="2" Background="{StaticResource PanelBrush}" CornerRadius="14" Padding="30" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="320" /></Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center" MaxWidth="600">
-                        <TextBlock Text="Automatic Vehicle Extraction" FontSize="28" FontWeight="SemiBold" />
-                        <TextBlock Text="Sprint 4 adds a local/offline vehicle extraction worker. Imported JPEG, PNG, and TIFF jobs can now be processed into transparent PNG files stored in the event's 04_Extracted folder." TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,12,0,24" LineHeight="23" />
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="330" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center" MaxWidth="650">
+                        <TextBlock Text="Automatic Vehicle Extraction" FontSize="29" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Sprint 4 adds a local/offline vehicle extraction worker. Imported JPEG, PNG, and TIFF jobs can now be processed into transparent PNG files stored in the event's 04_Extracted folder."
+                                   TextWrapping="Wrap"
+                                   FontSize="15"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,14,0,26"
+                                   LineHeight="24" />
                         <StackPanel Orientation="Horizontal">
-                            <Button Content="OPEN PRODUCTION" Width="190" Background="{StaticResource AccentBrush}" Click="Production_Click" />
-                            <Button Content="EVENT MANAGER" Width="160" Margin="12,0,0,0" Click="EventManager_Click" />
+                            <Button Content="OPEN PRODUCTION" Width="190" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="Production_Click" />
+                            <Button Content="EVENT MANAGER" Width="160" Margin="12,0,0,8" Click="EventManager_Click" />
                         </StackPanel>
                     </StackPanel>
-                    <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" CornerRadius="10" Padding="20" Margin="28,0,0,0">
+
+                    <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" CornerRadius="12" Padding="22" Margin="30,0,0,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="SPRINT 4 CHECKPOINT" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="✓ Local AI worker integration" Margin="0,16,0,0" />
-                            <TextBlock Text="✓ Transparent PNG output" Margin="0,9,0,0" />
-                            <TextBlock Text="✓ Extraction status in SQLite" Margin="0,9,0,0" />
-                            <TextBlock Text="✓ Manual Extract Selected test" Margin="0,9,0,0" />
-                            <TextBlock Text="✓ Event 04_Extracted storage" Margin="0,9,0,0" />
-                            <TextBlock Text="Next: automatic queue + better vehicle model" Margin="0,22,0,0" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="✓  Local AI worker integration" Margin="0,18,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Transparent PNG output" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Extraction status in SQLite" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Manual Extract Selected test" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <TextBlock Text="✓  Event 04_Extracted storage" Margin="0,11,0,0" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                            <Border Background="{StaticResource InputBrush}" CornerRadius="8" Padding="12" Margin="0,22,0,0">
+                                <TextBlock Text="Next: automatic queue + improved vehicle model" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            </Border>
                         </StackPanel>
                     </Border>
                 </Grid>
