@@ -3,27 +3,102 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <SolidColorBrush x:Key="AppBackgroundBrush" Color="#15181D" />
-        <SolidColorBrush x:Key="PanelBrush" Color="#20252B" />
-        <SolidColorBrush x:Key="PanelAltBrush" Color="#2A3037" />
-        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F5F7FA" />
-        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#AEB6C1" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#3D8BFF" />
-        <SolidColorBrush x:Key="SuccessBrush" Color="#44C46A" />
+        <!-- Photomotive Studio Master visual system -->
+        <SolidColorBrush x:Key="AppBackgroundBrush" Color="#11151A" />
+        <SolidColorBrush x:Key="SidebarBrush" Color="#171C22" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#1F252C" />
+        <SolidColorBrush x:Key="PanelAltBrush" Color="#29313A" />
+        <SolidColorBrush x:Key="PanelHoverBrush" Color="#323B45" />
+        <SolidColorBrush x:Key="InputBrush" Color="#151A20" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#3A4550" />
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F7F9FC" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#C6CED8" />
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#98A5B3" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#438EFF" />
+        <SolidColorBrush x:Key="AccentHoverBrush" Color="#66A3FF" />
+        <SolidColorBrush x:Key="SuccessBrush" Color="#4ED27A" />
+        <SolidColorBrush x:Key="WarningBrush" Color="#F2B84B" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FF6B6B" />
 
         <Style TargetType="Window">
             <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <!-- Explicit text styles prevent black text from appearing on dark panels. -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        </Style>
+
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         </Style>
 
         <Style TargetType="Button">
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="Background" Value="{StaticResource PanelAltBrush}" />
-            <Setter Property="Padding" Value="14,9" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="15,10" />
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource InputBrush}" />
+            <Setter Property="CaretBrush" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource InputBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+
+        <Style TargetType="DatePicker">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource InputBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource InputBrush}" />
+            <Setter Property="RowBackground" Value="{StaticResource InputBrush}" />
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource PanelBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="VerticalGridLinesBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="RowHeight" Value="38" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource PanelAltBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style TargetType="ProgressBar">
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{StaticResource InputBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
         </Style>
     </Application.Resources>
 </Application>
