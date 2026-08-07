@@ -49,6 +49,12 @@ public partial class MainWindow : Window
         window.ShowDialog();
     }
 
+    private void BackgroundManager_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new BackgroundManagerWindow { Owner = this };
+        window.ShowDialog();
+    }
+
     private void SetActiveEvent(EventRecord? eventRecord)
     {
         _activeEvent = eventRecord;
