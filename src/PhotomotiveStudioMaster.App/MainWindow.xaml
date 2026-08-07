@@ -31,7 +31,7 @@
                 <StackPanel Grid.Row="1" Margin="0,34,0,0">
                     <Button Content="Dashboard" HorizontalContentAlignment="Left" Background="{StaticResource AccentBrush}" />
                     <Button Content="Event Manager" HorizontalContentAlignment="Left" Click="EventManager_Click" />
-                    <Button Content="Production" HorizontalContentAlignment="Left" IsEnabled="False" />
+                    <Button Content="Production" HorizontalContentAlignment="Left" Click="Production_Click" />
                     <Button Content="Orders" HorizontalContentAlignment="Left" IsEnabled="False" />
                     <Button Content="Print Queue" HorizontalContentAlignment="Left" IsEnabled="False" />
                     <Button Content="Backgrounds" HorizontalContentAlignment="Left" IsEnabled="False" />
@@ -42,8 +42,8 @@
                 <Border Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="12">
                     <StackPanel>
                         <TextBlock Text="SYSTEM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="● Event Manager Ready" Foreground="{StaticResource SuccessBrush}" Margin="0,6,0,0" />
-                        <TextBlock Text="Version 0.2" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                        <TextBlock Text="● SD Card Import Ready" Foreground="{StaticResource SuccessBrush}" Margin="0,6,0,0" />
+                        <TextBlock Text="Version 0.3" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -77,22 +77,22 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="320" /></Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Center" MaxWidth="600">
-                        <TextBlock Text="Event Manager Milestone" FontSize="28" FontWeight="SemiBold" />
-                        <TextBlock Text="Create an event, automatically create its production folders, save it to the local SQLite database, and resume saved events later." TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,12,0,24" LineHeight="23" />
+                        <TextBlock Text="SD Card Import Engine" FontSize="28" FontWeight="SemiBold" />
+                        <TextBlock Text="Insert a photographer card, scan supported images, copy originals into the active event, checksum-verify every file, skip duplicates, and create numbered event jobs." TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,12,0,24" LineHeight="23" />
                         <StackPanel Orientation="Horizontal">
-                            <Button Content="CREATE NEW EVENT" Width="190" Background="{StaticResource AccentBrush}" Click="CreateEvent_Click" />
+                            <Button Content="OPEN PRODUCTION" Width="190" Background="{StaticResource AccentBrush}" Click="Production_Click" />
                             <Button Content="EVENT MANAGER" Width="160" Margin="12,0,0,0" Click="EventManager_Click" />
                         </StackPanel>
                     </StackPanel>
                     <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" CornerRadius="10" Padding="20" Margin="28,0,0,0">
                         <StackPanel>
-                            <TextBlock Text="MILESTONE STATUS" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="✓ SQLite local database" Margin="0,16,0,0" />
-                            <TextBlock Text="✓ New Event window" Margin="0,9,0,0" />
-                            <TextBlock Text="✓ Production folder creation" Margin="0,9,0,0" />
-                            <TextBlock Text="✓ Event Manager" Margin="0,9,0,0" />
-                            <TextBlock Text="✓ Resume saved event" Margin="0,9,0,0" />
-                            <TextBlock Text="Next: SD card import" Margin="0,22,0,0" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="SPRINT 3 STATUS" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="✓ Removable drive detection" Margin="0,16,0,0" />
+                            <TextBlock Text="✓ Image file scanning" Margin="0,9,0,0" />
+                            <TextBlock Text="✓ SHA-256 duplicate detection" Margin="0,9,0,0" />
+                            <TextBlock Text="✓ Verified file copying" Margin="0,9,0,0" />
+                            <TextBlock Text="✓ Event job numbering" Margin="0,9,0,0" />
+                            <TextBlock Text="Next: thumbnails + AI queue" Margin="0,22,0,0" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
                         </StackPanel>
                     </Border>
                 </Grid>
