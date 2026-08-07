@@ -90,16 +90,11 @@
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="125" />
                         </DataGrid.Columns>
                     </DataGrid>
-                    <Grid Grid.Row="2" Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0">
                         <Button x:Name="ExtractButton" Content="EXTRACT SELECTED" Width="150" Background="{StaticResource AccentBrush}" Click="ExtractSelected_Click" />
-                        <Button Grid.Column="1" Content="OPEN EXTRACTED FOLDER" Width="180" Margin="10,0,0,0" Click="OpenExtractedFolder_Click" />
-                        <TextBlock x:Name="ExtractionDetailText" Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
-                    </Grid>
+                        <Button Content="OPEN EXTRACTED FOLDER" Width="180" Margin="10,0,0,8" Click="OpenExtractedFolder_Click" />
+                        <Button Content="OPEN COMPOSER" Width="145" Margin="10,0,0,8" Click="OpenComposer_Click" />
+                    </StackPanel>
                 </Grid>
             </Border>
         </Grid>
@@ -113,6 +108,7 @@
                 <StackPanel>
                     <TextBlock x:Name="StatusText" Text="Insert an SD card, refresh drives, then scan the card." />
                     <TextBlock x:Name="DetailText" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,4,0,0" />
+                    <TextBlock x:Name="ExtractionDetailText" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,4,0,0" />
                 </StackPanel>
                 <ProgressBar x:Name="ImportProgressBar" Grid.Column="1" Height="14" Minimum="0" Maximum="100" Value="0" VerticalAlignment="Center" />
             </Grid>
