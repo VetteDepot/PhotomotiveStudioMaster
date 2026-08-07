@@ -42,7 +42,7 @@
                 <TextBox x:Name="EventCodeBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,14" ToolTip="Example: CBE" />
 
                 <TextBlock Grid.Row="2" Text="Date" VerticalAlignment="Center" />
-                <DatePicker x:Name="EventDatePicker" Grid.Row="2" Grid.Column="1" Margin="0,0,0,14" SelectedDate="{x:Static sys:DateTime.Today}" xmlns:sys="clr-namespace:System;assembly=mscorlib" />
+                <DatePicker x:Name="EventDatePicker" Grid.Row="2" Grid.Column="1" Margin="0,0,0,14" />
 
                 <TextBlock Grid.Row="3" Text="Location" VerticalAlignment="Center" />
                 <TextBox x:Name="LocationBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,14" />
