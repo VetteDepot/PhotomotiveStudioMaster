@@ -157,7 +157,8 @@ public sealed class BackgroundLibraryService
         var source = decoder.Frames[0];
         var maxDimension = 360.0;
         var scale = Math.Min(1.0, maxDimension / Math.Max(source.PixelWidth, source.PixelHeight));
-        var transformed = scale < 1.0
+
+        BitmapSource transformed = scale < 1.0
             ? new TransformedBitmap(source, new ScaleTransform(scale, scale))
             : source;
 
