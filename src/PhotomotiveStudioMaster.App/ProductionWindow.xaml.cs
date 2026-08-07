@@ -29,6 +29,13 @@ public partial class ProductionWindow : Window
 
     private void RefreshDrives_Click(object sender, RoutedEventArgs e) => RefreshDrives();
 
+    private void AiRuntime_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new AiRuntimeManagerWindow { Owner = this };
+        window.ShowDialog();
+        RefreshAiStatus();
+    }
+
     private void RefreshDrives()
     {
         var drives = _importService.GetRemovableDrives()
@@ -55,7 +62,7 @@ public partial class ProductionWindow : Window
         ExtractButton.IsEnabled = status.IsReady;
         ExtractionDetailText.Text = status.IsReady
             ? "Select an imported JPEG/PNG/TIFF job and extract the vehicle."
-            : "Run tools\\ai\\Install-AI.ps1 once, then reopen Production.";
+            : "Click AI Runtime to install or repair the local extraction engine.";
     }
 
     private void ScanCard_Click(object sender, RoutedEventArgs e)
@@ -147,8 +154,12 @@ public partial class ProductionWindow : Window
         var runtime = _extractionService.GetRuntimeStatus();
         if (!runtime.IsReady)
         {
-            MessageBox.Show(runtime.Message, "Local AI Setup Required", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            var setup = new AiRuntimeManagerWindow { Owner = this };
+            setup.ShowDialog();
+            RefreshAiStatus();
+            runtime = _extractionService.GetRuntimeStatus();
+            if (!runtime.IsReady)
+                return;
         }
 
         ExtractButton.IsEnabled = false;
