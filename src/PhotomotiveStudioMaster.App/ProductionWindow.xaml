@@ -1,7 +1,7 @@
 <Window x:Class="PhotomotiveStudioMaster.App.ProductionWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Production – Import & Vehicle Extraction"
+        Title="Production – Import &amp; Vehicle Extraction"
         Width="1180"
         Height="800"
         MinWidth="1000"
