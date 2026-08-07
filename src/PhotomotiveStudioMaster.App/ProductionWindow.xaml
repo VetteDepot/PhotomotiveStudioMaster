@@ -1,11 +1,11 @@
 <Window x:Class="PhotomotiveStudioMaster.App.ProductionWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Production – SD Card Import"
-        Width="1100"
-        Height="760"
-        MinWidth="960"
-        MinHeight="650"
+        Title="Production – Import & Vehicle Extraction"
+        Width="1180"
+        Height="800"
+        MinWidth="1000"
+        MinHeight="680"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -20,14 +20,19 @@
                 <TextBlock Text="Production" FontSize="30" FontWeight="SemiBold" />
                 <TextBlock x:Name="EventText" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5,0,0" />
             </StackPanel>
-            <Button Content="REFRESH DRIVES" DockPanel.Dock="Right" Width="140" Click="RefreshDrives_Click" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="12,7" Margin="0,0,12,0">
+                    <TextBlock x:Name="AiStatusText" Text="Checking local AI..." Foreground="{StaticResource TextSecondaryBrush}" />
+                </Border>
+                <Button Content="REFRESH DRIVES" Width="140" Click="RefreshDrives_Click" />
+            </StackPanel>
         </DockPanel>
 
         <Border Grid.Row="1" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="18" Margin="0,22,0,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="250" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -42,9 +47,9 @@
 
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="0.85*" />
                 <ColumnDefinition Width="18" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.15*" />
             </Grid.ColumnDefinitions>
 
             <Border Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="16">
@@ -71,18 +76,29 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,12">
-                        <TextBlock Text="EVENT IMPORT QUEUE" FontWeight="Bold" FontSize="12" />
+                        <TextBlock Text="EVENT PROCESSING QUEUE" FontWeight="Bold" FontSize="12" />
                         <TextBlock x:Name="ImportedCountText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" />
                     </DockPanel>
-                    <DataGrid x:Name="ImportedGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                    <DataGrid x:Name="ImportedGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Job" Binding="{Binding JobNumber}" Width="105" />
                             <DataGridTextColumn Header="Original" Binding="{Binding OriginalFileName}" Width="*" />
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="95" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="125" />
                         </DataGrid.Columns>
                     </DataGrid>
+                    <Grid Grid.Row="2" Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="ExtractButton" Content="EXTRACT SELECTED" Width="150" Background="{StaticResource AccentBrush}" Click="ExtractSelected_Click" />
+                        <Button Grid.Column="1" Content="OPEN EXTRACTED FOLDER" Width="180" Margin="10,0,0,0" Click="OpenExtractedFolder_Click" />
+                        <TextBlock x:Name="ExtractionDetailText" Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>
