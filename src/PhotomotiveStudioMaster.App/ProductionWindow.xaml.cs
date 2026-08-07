@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows;
 using PhotomotiveStudioMaster.App.Models;
 using PhotomotiveStudioMaster.App.Services;
@@ -9,6 +10,7 @@ public partial class ProductionWindow : Window
 {
     private readonly EventRecord _activeEvent;
     private readonly ImportService _importService = new();
+    private readonly VehicleExtractionService _extractionService = new();
     private readonly ObservableCollection<ImportCandidate> _candidates = new();
     private readonly ObservableCollection<ImportRecord> _importedJobs = new();
 
@@ -22,6 +24,7 @@ public partial class ProductionWindow : Window
 
         RefreshDrives();
         RefreshImportedJobs();
+        RefreshAiStatus();
     }
 
     private void RefreshDrives_Click(object sender, RoutedEventArgs e) => RefreshDrives();
@@ -42,6 +45,17 @@ public partial class ProductionWindow : Window
         {
             StatusText.Text = "No removable drives detected. Insert the SD card and click Refresh Drives.";
         }
+    }
+
+    private void RefreshAiStatus()
+    {
+        var status = _extractionService.GetRuntimeStatus();
+        AiStatusText.Text = status.IsReady ? "● Local AI Ready" : "○ AI Setup Required";
+        AiStatusText.ToolTip = status.Message;
+        ExtractButton.IsEnabled = status.IsReady;
+        ExtractionDetailText.Text = status.IsReady
+            ? "Select an imported JPEG/PNG/TIFF job and extract the vehicle."
+            : "Run tools\\ai\\Install-AI.ps1 once, then reopen Production.";
     }
 
     private void ScanCard_Click(object sender, RoutedEventArgs e)
@@ -120,6 +134,71 @@ public partial class ProductionWindow : Window
             ImportButton.IsEnabled = _candidates.Count > 0;
             DriveCombo.IsEnabled = true;
         }
+    }
+
+    private async void ExtractSelected_Click(object sender, RoutedEventArgs e)
+    {
+        if (ImportedGrid.SelectedItem is not ImportRecord selected)
+        {
+            MessageBox.Show("Select an imported job first.", "Vehicle Extraction", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var runtime = _extractionService.GetRuntimeStatus();
+        if (!runtime.IsReady)
+        {
+            MessageBox.Show(runtime.Message, "Local AI Setup Required", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        ExtractButton.IsEnabled = false;
+        StatusText.Text = $"Extracting vehicle from {selected.JobNumber}...";
+        DetailText.Text = "Local AI processing is running. The first extraction may take longer while the model initializes.";
+        ImportProgressBar.IsIndeterminate = true;
+
+        try
+        {
+            var result = await _extractionService.ExtractAsync(_activeEvent, selected);
+            ImportProgressBar.IsIndeterminate = false;
+
+            if (!result.Success)
+            {
+                StatusText.Text = $"Extraction failed for {selected.JobNumber}.";
+                DetailText.Text = result.ErrorMessage;
+                MessageBox.Show(result.ErrorMessage, "Vehicle Extraction Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                RefreshImportedJobs();
+                return;
+            }
+
+            RefreshImportedJobs();
+            StatusText.Text = $"Vehicle extraction complete: {selected.JobNumber}";
+            DetailText.Text = $"Transparent PNG saved to {result.OutputPath}";
+            ExtractionDetailText.Text = "Extraction complete. Open the extracted folder to inspect the transparent PNG.";
+        }
+        catch (Exception ex)
+        {
+            ImportProgressBar.IsIndeterminate = false;
+            StatusText.Text = "Vehicle extraction stopped unexpectedly.";
+            DetailText.Text = ex.Message;
+            MessageBox.Show(ex.Message, "Vehicle Extraction Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            ImportProgressBar.IsIndeterminate = false;
+            ExtractButton.IsEnabled = _extractionService.GetRuntimeStatus().IsReady;
+        }
+    }
+
+    private void OpenExtractedFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var folder = Path.Combine(_activeEvent.RootFolder, "04_Extracted");
+        Directory.CreateDirectory(folder);
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "explorer.exe",
+            Arguments = $"\"{folder}\"",
+            UseShellExecute = true
+        });
     }
 
     private void RefreshImportedJobs()
