@@ -33,12 +33,37 @@ public sealed class BackgroundRepository
             IsFavorite INTEGER NOT NULL DEFAULT 0,
             FileSize INTEGER NOT NULL DEFAULT 0,
             CreatedAt TEXT NOT NULL,
-            LastUsedAt TEXT NULL
+            LastUsedAt TEXT NULL,
+            PixelWidth INTEGER NOT NULL DEFAULT 0,
+            PixelHeight INTEGER NOT NULL DEFAULT 0,
+            Rating INTEGER NOT NULL DEFAULT 0,
+            UseCount INTEGER NOT NULL DEFAULT 0
         );
         CREATE UNIQUE INDEX IF NOT EXISTS IX_Backgrounds_FilePath
             ON Backgrounds(FilePath);
         """;
         command.ExecuteNonQuery();
+
+        EnsureColumn(connection, "Backgrounds", "PixelWidth", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Backgrounds", "PixelHeight", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Backgrounds", "Rating", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Backgrounds", "UseCount", "INTEGER NOT NULL DEFAULT 0");
+    }
+
+    private static void EnsureColumn(SqliteConnection connection, string table, string column, string definition)
+    {
+        var check = connection.CreateCommand();
+        check.CommandText = $"PRAGMA table_info({table});";
+        using var reader = check.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+                return;
+        }
+        reader.Close();
+        var alter = connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
+        alter.ExecuteNonQuery();
     }
 
     public long Add(BackgroundRecord record)
@@ -49,9 +74,9 @@ public sealed class BackgroundRepository
         command.CommandText =
         """
         INSERT INTO Backgrounds
-        (Name, Category, FilePath, ThumbnailPath, Tags, IsFavorite, FileSize, CreatedAt, LastUsedAt)
+        (Name, Category, FilePath, ThumbnailPath, Tags, IsFavorite, FileSize, CreatedAt, LastUsedAt, PixelWidth, PixelHeight, Rating, UseCount)
         VALUES
-        ($name, $category, $filePath, $thumbnailPath, $tags, $favorite, $fileSize, $createdAt, $lastUsedAt);
+        ($name, $category, $filePath, $thumbnailPath, $tags, $favorite, $fileSize, $createdAt, $lastUsedAt, $pixelWidth, $pixelHeight, $rating, $useCount);
         SELECT last_insert_rowid();
         """;
         Bind(command, record);
@@ -74,7 +99,11 @@ public sealed class BackgroundRepository
             IsFavorite = $favorite,
             FileSize = $fileSize,
             CreatedAt = $createdAt,
-            LastUsedAt = $lastUsedAt
+            LastUsedAt = $lastUsedAt,
+            PixelWidth = $pixelWidth,
+            PixelHeight = $pixelHeight,
+            Rating = $rating,
+            UseCount = $useCount
         WHERE Id = $id;
         """;
         Bind(command, record);
@@ -98,7 +127,7 @@ public sealed class BackgroundRepository
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
         var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM Backgrounds ORDER BY IsFavorite DESC, Name COLLATE NOCASE;";
+        command.CommandText = "SELECT * FROM Backgrounds ORDER BY IsFavorite DESC, Rating DESC, Name COLLATE NOCASE;";
         using var reader = command.ExecuteReader();
         while (reader.Read())
             result.Add(Read(reader));
@@ -116,6 +145,10 @@ public sealed class BackgroundRepository
         command.Parameters.AddWithValue("$fileSize", record.FileSize);
         command.Parameters.AddWithValue("$createdAt", record.CreatedAt.ToString("O"));
         command.Parameters.AddWithValue("$lastUsedAt", record.LastUsedAt?.ToString("O") ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$pixelWidth", record.PixelWidth);
+        command.Parameters.AddWithValue("$pixelHeight", record.PixelHeight);
+        command.Parameters.AddWithValue("$rating", Math.Clamp(record.Rating, 0, 5));
+        command.Parameters.AddWithValue("$useCount", Math.Max(0, record.UseCount));
     }
 
     private static BackgroundRecord Read(SqliteDataReader reader)
@@ -132,7 +165,11 @@ public sealed class BackgroundRepository
             IsFavorite = reader.GetInt64(reader.GetOrdinal("IsFavorite")) == 1,
             FileSize = reader.GetInt64(reader.GetOrdinal("FileSize")),
             CreatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("CreatedAt"))),
-            LastUsedAt = reader.IsDBNull(lastUsedOrdinal) ? null : DateTime.Parse(reader.GetString(lastUsedOrdinal))
+            LastUsedAt = reader.IsDBNull(lastUsedOrdinal) ? null : DateTime.Parse(reader.GetString(lastUsedOrdinal)),
+            PixelWidth = reader.GetInt32(reader.GetOrdinal("PixelWidth")),
+            PixelHeight = reader.GetInt32(reader.GetOrdinal("PixelHeight")),
+            Rating = reader.GetInt32(reader.GetOrdinal("Rating")),
+            UseCount = reader.GetInt32(reader.GetOrdinal("UseCount"))
         };
     }
 }
