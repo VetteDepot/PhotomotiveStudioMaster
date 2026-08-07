@@ -1,0 +1,69 @@
+<Window x:Class="PhotomotiveStudioMaster.App.NewEventWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New Event"
+        Width="720"
+        Height="720"
+        MinWidth="680"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="Create New Event" FontSize="30" FontWeight="SemiBold" />
+            <TextBlock Text="Set up the event once. Studio Master will create the production folders and save the event locally." Margin="0,8,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="{StaticResource PanelBrush}" CornerRadius="12" Padding="24" Margin="0,24,0,24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Event name" VerticalAlignment="Center" />
+                <TextBox x:Name="EventNameBox" Grid.Column="1" Margin="0,0,0,14" />
+
+                <TextBlock Grid.Row="1" Text="Event code" VerticalAlignment="Center" />
+                <TextBox x:Name="EventCodeBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,14" ToolTip="Example: CBE" />
+
+                <TextBlock Grid.Row="2" Text="Date" VerticalAlignment="Center" />
+                <DatePicker x:Name="EventDatePicker" Grid.Row="2" Grid.Column="1" Margin="0,0,0,14" SelectedDate="{x:Static sys:DateTime.Today}" xmlns:sys="clr-namespace:System;assembly=mscorlib" />
+
+                <TextBlock Grid.Row="3" Text="Location" VerticalAlignment="Center" />
+                <TextBox x:Name="LocationBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,14" />
+
+                <TextBlock Grid.Row="4" Text="Photographer" VerticalAlignment="Center" />
+                <TextBox x:Name="PhotographerBox" Grid.Row="4" Grid.Column="1" Margin="0,0,0,14" />
+
+                <TextBlock Grid.Row="5" Text="Operator" VerticalAlignment="Center" />
+                <TextBox x:Name="OperatorBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,14" />
+
+                <TextBlock Grid.Row="6" Text="Event storage" VerticalAlignment="Top" Margin="0,6,0,0" />
+                <StackPanel Grid.Row="6" Grid.Column="1">
+                    <TextBox x:Name="StorageFolderBox" IsReadOnly="True" />
+                    <TextBlock Text="Default: Documents\Photomotive Studio Master\Events" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,6,0,0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <DockPanel Grid.Row="2">
+            <Button Content="CANCEL" Width="110" DockPanel.Dock="Left" IsCancel="True" />
+            <Button Content="CREATE &amp; START EVENT" Width="190" DockPanel.Dock="Right" Background="{StaticResource AccentBrush}" Click="CreateEvent_Click" />
+        </DockPanel>
+    </Grid>
+</Window>
