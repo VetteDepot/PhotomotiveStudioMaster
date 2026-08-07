@@ -33,7 +33,8 @@ public sealed class ImportRepository
             Sha256 TEXT NOT NULL,
             FileSize INTEGER NOT NULL,
             ImportedAt TEXT NOT NULL,
-            Status TEXT NOT NULL
+            Status TEXT NOT NULL,
+            ExtractionPath TEXT NOT NULL DEFAULT ''
         );
         CREATE UNIQUE INDEX IF NOT EXISTS IX_Imports_Event_Sha256
             ON Imports(EventId, Sha256);
@@ -41,6 +42,25 @@ public sealed class ImportRepository
             ON Imports(EventId, JobNumber);
         """;
         command.ExecuteNonQuery();
+
+        EnsureColumn(connection, "Imports", "ExtractionPath", "TEXT NOT NULL DEFAULT ''");
+    }
+
+    private static void EnsureColumn(SqliteConnection connection, string table, string column, string definition)
+    {
+        var check = connection.CreateCommand();
+        check.CommandText = $"PRAGMA table_info({table});";
+        using var reader = check.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+                return;
+        }
+
+        reader.Close();
+        var alter = connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
+        alter.ExecuteNonQuery();
     }
 
     public bool ExistsByHash(long eventId, string sha256)
@@ -72,9 +92,9 @@ public sealed class ImportRepository
         command.CommandText =
         """
         INSERT INTO Imports
-        (EventId, JobNumber, OriginalFileName, StoredPath, Sha256, FileSize, ImportedAt, Status)
+        (EventId, JobNumber, OriginalFileName, StoredPath, Sha256, FileSize, ImportedAt, Status, ExtractionPath)
         VALUES
-        ($eventId, $jobNumber, $originalFileName, $storedPath, $sha256, $fileSize, $importedAt, $status);
+        ($eventId, $jobNumber, $originalFileName, $storedPath, $sha256, $fileSize, $importedAt, $status, $extractionPath);
         """;
         command.Parameters.AddWithValue("$eventId", record.EventId);
         command.Parameters.AddWithValue("$jobNumber", record.JobNumber);
@@ -84,6 +104,19 @@ public sealed class ImportRepository
         command.Parameters.AddWithValue("$fileSize", record.FileSize);
         command.Parameters.AddWithValue("$importedAt", record.ImportedAt.ToString("O"));
         command.Parameters.AddWithValue("$status", record.Status);
+        command.Parameters.AddWithValue("$extractionPath", record.ExtractionPath);
+        command.ExecuteNonQuery();
+    }
+
+    public void UpdateExtraction(long id, string status, string extractionPath)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Imports SET Status = $status, ExtractionPath = $path WHERE Id = $id;";
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$path", extractionPath ?? string.Empty);
+        command.Parameters.AddWithValue("$id", id);
         command.ExecuteNonQuery();
     }
 
@@ -108,7 +141,8 @@ public sealed class ImportRepository
                 Sha256 = reader.GetString(reader.GetOrdinal("Sha256")),
                 FileSize = reader.GetInt64(reader.GetOrdinal("FileSize")),
                 ImportedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("ImportedAt"))),
-                Status = reader.GetString(reader.GetOrdinal("Status"))
+                Status = reader.GetString(reader.GetOrdinal("Status")),
+                ExtractionPath = reader.GetString(reader.GetOrdinal("ExtractionPath"))
             });
         }
         return results;
