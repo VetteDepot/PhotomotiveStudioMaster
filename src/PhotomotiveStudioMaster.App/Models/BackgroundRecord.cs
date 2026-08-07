@@ -12,9 +12,20 @@ public sealed class BackgroundRecord
     public long FileSize { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastUsedAt { get; set; }
+    public int PixelWidth { get; set; }
+    public int PixelHeight { get; set; }
+    public int Rating { get; set; }
+    public int UseCount { get; set; }
 
     public string FavoriteGlyph => IsFavorite ? "★" : "☆";
     public string StorageDisplay => FileSize < 1024 * 1024
         ? $"{FileSize / 1024.0:0} KB"
         : $"{FileSize / 1024.0 / 1024.0:0.0} MB";
+    public string ResolutionDisplay => PixelWidth > 0 && PixelHeight > 0
+        ? $"{PixelWidth:N0} × {PixelHeight:N0}"
+        : "Unknown resolution";
+    public string RatingDisplay => Rating <= 0
+        ? "☆☆☆☆☆"
+        : new string('★', Math.Clamp(Rating, 1, 5)) + new string('☆', 5 - Math.Clamp(Rating, 1, 5));
+    public string UsageDisplay => UseCount == 1 ? "Used 1 time" : $"Used {UseCount:N0} times";
 }
