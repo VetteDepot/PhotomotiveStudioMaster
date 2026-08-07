@@ -100,7 +100,7 @@ public sealed class BackgroundLibraryService
                     await input.CopyToAsync(output);
                 }
 
-                CreateThumbnail(masterPath, thumbnailPath);
+                var dimensions = CreateThumbnail(masterPath, thumbnailPath);
                 var info = new FileInfo(masterPath);
                 var record = new BackgroundRecord
                 {
@@ -109,7 +109,9 @@ public sealed class BackgroundLibraryService
                     FilePath = masterPath,
                     ThumbnailPath = thumbnailPath,
                     FileSize = info.Length,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    PixelWidth = dimensions.Width,
+                    PixelHeight = dimensions.Height
                 };
                 record.Id = _repository.Add(record);
                 result.Imported++;
@@ -134,6 +136,7 @@ public sealed class BackgroundLibraryService
     public void MarkUsed(BackgroundRecord record)
     {
         record.LastUsedAt = DateTime.Now;
+        record.UseCount++;
         _repository.Update(record);
     }
 
@@ -150,12 +153,33 @@ public sealed class BackgroundLibraryService
         return (all.Count, all.Count(x => x.IsFavorite), all.Sum(x => x.FileSize));
     }
 
-    private static void CreateThumbnail(string sourcePath, string thumbnailPath)
+    public void RefreshImageMetadata(BackgroundRecord record)
+    {
+        if (!File.Exists(record.FilePath))
+            return;
+
+        try
+        {
+            using var stream = new FileStream(record.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+            var frame = decoder.Frames[0];
+            record.PixelWidth = frame.PixelWidth;
+            record.PixelHeight = frame.PixelHeight;
+            record.FileSize = new FileInfo(record.FilePath).Length;
+            _repository.Update(record);
+        }
+        catch
+        {
+            // Leave existing metadata intact if the file is temporarily unavailable.
+        }
+    }
+
+    private static (int Width, int Height) CreateThumbnail(string sourcePath, string thumbnailPath)
     {
         using var stream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
         var source = decoder.Frames[0];
-        var maxDimension = 360.0;
+        var maxDimension = 420.0;
         var scale = Math.Min(1.0, maxDimension / Math.Max(source.PixelWidth, source.PixelHeight));
 
         BitmapSource transformed = scale < 1.0
@@ -166,6 +190,7 @@ public sealed class BackgroundLibraryService
         encoder.Frames.Add(BitmapFrame.Create(transformed));
         using var output = new FileStream(thumbnailPath, FileMode.Create, FileAccess.Write, FileShare.None);
         encoder.Save(output);
+        return (source.PixelWidth, source.PixelHeight);
     }
 
     private static void TryDelete(string path)
