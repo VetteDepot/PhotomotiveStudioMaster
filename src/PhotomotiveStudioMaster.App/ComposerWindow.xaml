@@ -2,12 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Photomotive Automotive Photo Studio"
-        Width="1620"
-        Height="960"
-        MinWidth="1280"
-        MinHeight="800"
+        Width="1660"
+        Height="980"
+        MinWidth="1320"
+        MinHeight="820"
         WindowStartupLocation="CenterOwner"
-        Loaded="ComposerWindow_Phase7Loaded"
+        Loaded="ComposerWindow_Phase7ReflectionLoaded"
         KeyDown="Window_KeyDown"
         Closing="Window_Closing">
     <Grid Margin="18">
@@ -23,12 +23,13 @@
                 <TextBlock x:Name="JobText" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="AUTO POSITION" Width="125" Margin="0,0,7,0" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoPosition_Click" />
-                <Button Content="AUTO SHADOW" Width="110" Margin="0,0,7,0" Click="AutoShadow_Click" />
-                <Button Content="AUTO HALO" Width="105" Margin="0,0,7,0" Click="AutoHaloRepair_Click" />
-                <Button Content="AUTO LIGHT MATCH" Width="135" Margin="0,0,7,0" Click="AutoLightMatch_Click" />
-                <Button Content="SAVE PROJECT" Width="115" Margin="0,0,9,0" Click="SaveProject_Click" />
-                <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="9" Padding="11,8">
+                <Button Content="AUTO POSITION" Width="120" Margin="0,0,6,0" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoPosition_Click" />
+                <Button Content="AUTO SHADOW" Width="105" Margin="0,0,6,0" Click="AutoShadow_Click" />
+                <Button Content="AUTO REFLECTION" Width="125" Margin="0,0,6,0" Click="AutoReflection_Click" />
+                <Button Content="AUTO HALO" Width="95" Margin="0,0,6,0" Click="AutoHaloRepair_Click" />
+                <Button Content="AUTO LIGHT MATCH" Width="130" Margin="0,0,6,0" Click="AutoLightMatch_Click" />
+                <Button Content="SAVE PROJECT" Width="110" Margin="0,0,8,0" Click="SaveProject_Click" />
+                <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="9" Padding="10,8">
                     <StackPanel>
                         <TextBlock Text="8 × 10 LANDSCAPE  •  3000 × 2400  •  300 PPI" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
                         <TextBlock Text="Drag = move  •  Wheel = scale  •  Space = before/after" Foreground="{StaticResource TextMutedBrush}" FontSize="10" HorizontalAlignment="Right" Margin="0,2,0,0" />
@@ -43,7 +44,7 @@
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="335" />
+                <ColumnDefinition Width="350" />
             </Grid.ColumnDefinitions>
 
             <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="11" Padding="12">
@@ -105,25 +106,21 @@
                     <DockPanel Margin="0,0,0,8">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="LIVE PHOTO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <Border x:Name="CompareBadge" Background="{StaticResource AccentBrush}" CornerRadius="5" Padding="7,2" Margin="9,-2,0,0" Visibility="Collapsed">
-                                <TextBlock Text="ORIGINAL" FontSize="9" FontWeight="Bold" />
-                            </Border>
-                            <Border x:Name="HaloBadge" Background="#B0006DFF" CornerRadius="5" Padding="7,2" Margin="7,-2,0,0" Visibility="Collapsed">
-                                <TextBlock Text="HALO OVERLAY" FontSize="9" FontWeight="Bold" />
-                            </Border>
-                            <Border x:Name="RealismBadge" Background="#A0358E6B" CornerRadius="5" Padding="7,2" Margin="7,-2,0,0" Visibility="Collapsed">
-                                <TextBlock Text="REALISM MATCH" FontSize="9" FontWeight="Bold" />
-                            </Border>
+                            <Border x:Name="CompareBadge" Background="{StaticResource AccentBrush}" CornerRadius="5" Padding="7,2" Margin="9,-2,0,0" Visibility="Collapsed"><TextBlock Text="ORIGINAL" FontSize="9" FontWeight="Bold" /></Border>
+                            <Border x:Name="HaloBadge" Background="#B0006DFF" CornerRadius="5" Padding="7,2" Margin="7,-2,0,0" Visibility="Collapsed"><TextBlock Text="HALO OVERLAY" FontSize="9" FontWeight="Bold" /></Border>
+                            <Border x:Name="RealismBadge" Background="#A0358E6B" CornerRadius="5" Padding="7,2" Margin="7,-2,0,0" Visibility="Collapsed"><TextBlock Text="REALISM MATCH" FontSize="9" FontWeight="Bold" /></Border>
+                            <Border x:Name="ReflectionBadge" Background="#A04B7CB8" CornerRadius="5" Padding="7,2" Margin="7,-2,0,0" Visibility="Collapsed"><TextBlock Text="REFLECTION" FontSize="9" FontWeight="Bold" /></Border>
                         </StackPanel>
                         <TextBlock x:Name="SelectedBackgroundText" DockPanel.Dock="Right" Foreground="{StaticResource TextMutedBrush}" />
                     </DockPanel>
                     <Viewbox Grid.Row="1" Stretch="Uniform">
                         <Grid x:Name="PreviewCanvas" Width="800" Height="640" Background="#171C22" ClipToBounds="True" PreviewMouseWheel="PreviewCanvas_PreviewMouseWheel">
                             <Image x:Name="BackgroundPreviewImage" Width="800" Height="640" Stretch="UniformToFill" />
+                            <Canvas x:Name="ReflectionCanvas" Width="800" Height="640" IsHitTestVisible="False" Visibility="Collapsed">
+                                <Image x:Name="ReflectionPreviewImage" Stretch="Fill" />
+                            </Canvas>
                             <Canvas x:Name="ShadowCanvas" Width="800" Height="640" IsHitTestVisible="False">
-                                <Ellipse x:Name="GroundShadowEllipse" Fill="#D9000000" RenderTransformOrigin="0.5,0.5">
-                                    <Ellipse.Effect><BlurEffect x:Name="GroundShadowBlur" Radius="18" /></Ellipse.Effect>
-                                </Ellipse>
+                                <Ellipse x:Name="GroundShadowEllipse" Fill="#D9000000" RenderTransformOrigin="0.5,0.5"><Ellipse.Effect><BlurEffect x:Name="GroundShadowBlur" Radius="18" /></Ellipse.Effect></Ellipse>
                                 <Ellipse x:Name="LeftContactShadow" Fill="#E6000000"><Ellipse.Effect><BlurEffect Radius="5" /></Ellipse.Effect></Ellipse>
                                 <Ellipse x:Name="RightContactShadow" Fill="#E6000000"><Ellipse.Effect><BlurEffect Radius="5" /></Ellipse.Effect></Ellipse>
                             </Canvas>
@@ -132,8 +129,7 @@
                                        MouseLeftButtonDown="CarPreviewImage_MouseLeftButtonDown"
                                        MouseMove="CarPreviewImage_MouseMove"
                                        MouseLeftButtonUp="CarPreviewImage_MouseLeftButtonUp" />
-                                <Image x:Name="HaloOverlayImage"
-                                       IsHitTestVisible="False" Stretch="Fill" RenderTransformOrigin="0.5,0.5" Visibility="Collapsed"
+                                <Image x:Name="HaloOverlayImage" IsHitTestVisible="False" Stretch="Fill" RenderTransformOrigin="0.5,0.5" Visibility="Collapsed"
                                        Width="{Binding ActualWidth, ElementName=CarPreviewImage}"
                                        Height="{Binding ActualHeight, ElementName=CarPreviewImage}"
                                        Canvas.Left="{Binding Path=(Canvas.Left), ElementName=CarPreviewImage}"
@@ -152,96 +148,61 @@
                     <StackPanel>
                         <TextBlock Text="PLACEMENT" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
                         <TextBlock Text="The car is cropped to its visible bounds for accurate placement." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,6,0,10" />
-                        <UniformGrid Columns="2" Margin="0,0,0,3">
-                            <Button Content="AUTO FIT" Margin="0,0,4,6" Click="AutoFit_Click" />
-                            <Button Content="RESET" Margin="4,0,0,6" Click="ResetPlacement_Click" />
-                        </UniformGrid>
-                        <TextBlock Text="Scale" FontWeight="SemiBold" Margin="0,7,0,2" />
-                        <DockPanel><TextBlock x:Name="ScaleValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ScaleSlider" Minimum="30" Maximum="175" Value="100" TickFrequency="5" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Horizontal" FontWeight="SemiBold" Margin="0,10,0,2" />
-                        <DockPanel><TextBlock x:Name="XValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="XSlider" Minimum="-360" Maximum="360" Value="0" TickFrequency="10" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Vertical" FontWeight="SemiBold" Margin="0,10,0,2" />
-                        <DockPanel><TextBlock x:Name="YValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="YSlider" Minimum="-280" Maximum="280" Value="90" TickFrequency="10" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Rotation" FontWeight="SemiBold" Margin="0,10,0,2" />
-                        <DockPanel><TextBlock x:Name="RotationValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RotationSlider" Minimum="-10" Maximum="10" Value="0" TickFrequency="1" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
+                        <UniformGrid Columns="2" Margin="0,0,0,3"><Button Content="AUTO FIT" Margin="0,0,4,6" Click="AutoFit_Click" /><Button Content="RESET" Margin="4,0,0,6" Click="ResetPlacement_Click" /></UniformGrid>
+                        <TextBlock Text="Scale" FontWeight="SemiBold" Margin="0,7,0,2" /><DockPanel><TextBlock x:Name="ScaleValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ScaleSlider" Minimum="30" Maximum="175" Value="100" TickFrequency="5" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Horizontal" FontWeight="SemiBold" Margin="0,10,0,2" /><DockPanel><TextBlock x:Name="XValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="XSlider" Minimum="-360" Maximum="360" Value="0" TickFrequency="10" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Vertical" FontWeight="SemiBold" Margin="0,10,0,2" /><DockPanel><TextBlock x:Name="YValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="YSlider" Minimum="-280" Maximum="280" Value="90" TickFrequency="10" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Rotation" FontWeight="SemiBold" Margin="0,10,0,2" /><DockPanel><TextBlock x:Name="RotationValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RotationSlider" Minimum="-10" Maximum="10" Value="0" TickFrequency="1" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
 
                         <Separator Margin="0,12,0,10" />
-                        <DockPanel>
-                            <TextBlock Text="SMART SHADOW" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <CheckBox x:Name="ShadowEnabledCheckBox" DockPanel.Dock="Right" Content="ON" IsChecked="True" VerticalAlignment="Center" Checked="ShadowControl_Changed" Unchecked="ShadowControl_Changed" />
-                        </DockPanel>
-                        <UniformGrid Columns="2" Margin="0,8,0,3">
-                            <Button Content="AUTO SHADOW" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoShadow_Click" />
-                            <Button Content="RESET SHADOW" Margin="4,0,0,6" Click="ResetShadow_Click" />
-                        </UniformGrid>
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" Margin="0,6,0,2" />
-                        <DockPanel><TextBlock x:Name="ShadowOpacityValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowOpacitySlider" Minimum="0" Maximum="80" Value="34" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Softness" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="ShadowSoftnessValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowSoftnessSlider" Minimum="2" Maximum="45" Value="20" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Width" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="ShadowWidthValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowWidthSlider" Minimum="35" Maximum="135" Value="88" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Length" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="ShadowLengthValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowLengthSlider" Minimum="15" Maximum="100" Value="45" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Angle" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="ShadowAngleValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowAngleSlider" Minimum="-60" Maximum="60" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Horizontal offset" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="ShadowXValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowXSlider" Minimum="-180" Maximum="180" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Vertical offset" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="ShadowYValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowYSlider" Minimum="-100" Maximum="140" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Tire contact" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="ContactShadowValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ContactShadowSlider" Minimum="0" Maximum="100" Value="58" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <DockPanel><TextBlock Text="SMART SHADOW" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" /><CheckBox x:Name="ShadowEnabledCheckBox" DockPanel.Dock="Right" Content="ON" IsChecked="True" VerticalAlignment="Center" Checked="ShadowControl_Changed" Unchecked="ShadowControl_Changed" /></DockPanel>
+                        <UniformGrid Columns="2" Margin="0,8,0,3"><Button Content="AUTO SHADOW" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoShadow_Click" /><Button Content="RESET SHADOW" Margin="4,0,0,6" Click="ResetShadow_Click" /></UniformGrid>
+                        <TextBlock Text="Opacity" FontWeight="SemiBold" Margin="0,6,0,2" /><DockPanel><TextBlock x:Name="ShadowOpacityValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowOpacitySlider" Minimum="0" Maximum="80" Value="34" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Softness" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ShadowSoftnessValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowSoftnessSlider" Minimum="2" Maximum="45" Value="20" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Width" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ShadowWidthValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowWidthSlider" Minimum="35" Maximum="135" Value="88" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Length" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ShadowLengthValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowLengthSlider" Minimum="15" Maximum="100" Value="45" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Angle" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ShadowAngleValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowAngleSlider" Minimum="-60" Maximum="60" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Horizontal offset" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ShadowXValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowXSlider" Minimum="-180" Maximum="180" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Vertical offset" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ShadowYValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowYSlider" Minimum="-100" Maximum="140" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Tire contact" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ContactShadowValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ContactShadowSlider" Minimum="0" Maximum="100" Value="58" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
 
                         <Separator Margin="0,13,0,10" />
-                        <DockPanel>
-                            <TextBlock Text="HALO INSPECTOR" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <CheckBox x:Name="HaloOverlayCheckBox" DockPanel.Dock="Right" Content="OVERLAY" VerticalAlignment="Center" Checked="HaloOverlay_Changed" Unchecked="HaloOverlay_Changed" />
-                        </DockPanel>
+                        <DockPanel><TextBlock Text="REFLECTION ENGINE" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" /><CheckBox x:Name="ReflectionEnabledCheckBox" DockPanel.Dock="Right" Content="ON" VerticalAlignment="Center" Checked="ReflectionControl_Changed" Unchecked="ReflectionControl_Changed" /></DockPanel>
+                        <TextBlock Text="Add a mirrored vehicle reflection for polished floors, glass, wet pavement, or water." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,5,0,8" />
+                        <UniformGrid Columns="2" Margin="0,0,0,3"><Button Content="AUTO REFLECTION" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoReflection_Click" /><Button Content="RESET" Margin="4,0,0,6" Click="ResetReflection_Click" /></UniformGrid>
+                        <TextBlock Text="Surface" FontWeight="SemiBold" Margin="0,5,0,2" />
+                        <ComboBox x:Name="ReflectionModeCombo" SelectionChanged="ReflectionMode_Changed" Margin="0,0,0,4" />
+                        <TextBlock Text="Opacity" FontWeight="SemiBold" Margin="0,6,0,2" /><DockPanel><TextBlock x:Name="ReflectionOpacityValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ReflectionOpacitySlider" Minimum="0" Maximum="80" Value="30" ValueChanged="ReflectionSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Length" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ReflectionLengthValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ReflectionLengthSlider" Minimum="15" Maximum="110" Value="65" ValueChanged="ReflectionSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Blur" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ReflectionBlurValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ReflectionBlurSlider" Minimum="0" Maximum="8" Value="1" TickFrequency="0.5" ValueChanged="ReflectionSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Fade" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ReflectionFadeValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ReflectionFadeSlider" Minimum="20" Maximum="100" Value="78" ValueChanged="ReflectionSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Ground gap" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ReflectionOffsetValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ReflectionOffsetSlider" Minimum="-20" Maximum="50" Value="0" ValueChanged="ReflectionSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Water ripple" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="ReflectionRippleValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ReflectionRippleSlider" Minimum="0" Maximum="20" Value="0" ValueChanged="ReflectionSlider_ValueChanged" /></DockPanel>
+
+                        <Separator Margin="0,13,0,10" />
+                        <DockPanel><TextBlock Text="HALO INSPECTOR" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" /><CheckBox x:Name="HaloOverlayCheckBox" DockPanel.Dock="Right" Content="OVERLAY" VerticalAlignment="Center" Checked="HaloOverlay_Changed" Unchecked="HaloOverlay_Changed" /></DockPanel>
                         <TextBlock Text="Non-destructive edge cleanup for white/dark fringes and color spill." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,5,0,8" />
-                        <UniformGrid Columns="2" Margin="0,0,0,3">
-                            <Button Content="AUTO REPAIR" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoHaloRepair_Click" />
-                            <Button Content="RESET EDGES" Margin="4,0,0,6" Click="ResetHalo_Click" />
-                        </UniformGrid>
-                        <TextBlock Text="Edge feather" FontWeight="SemiBold" Margin="0,6,0,2" />
-                        <DockPanel><TextBlock x:Name="HaloFeatherValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloFeatherSlider" Minimum="0" Maximum="4" Value="0" TickFrequency="0.5" IsSnapToTickEnabled="True" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Mask expand / contract" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="HaloMaskValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloMaskSlider" Minimum="-4" Maximum="4" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Halo removal" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="HaloRemovalValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloRemovalSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Color decontamination" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="HaloDecontamValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloDecontamSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Fine detail recovery" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="HaloDetailValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloDetailSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+                        <UniformGrid Columns="2" Margin="0,0,0,3"><Button Content="AUTO REPAIR" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoHaloRepair_Click" /><Button Content="RESET EDGES" Margin="4,0,0,6" Click="ResetHalo_Click" /></UniformGrid>
+                        <TextBlock Text="Edge feather" FontWeight="SemiBold" Margin="0,6,0,2" /><DockPanel><TextBlock x:Name="HaloFeatherValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloFeatherSlider" Minimum="0" Maximum="4" Value="0" TickFrequency="0.5" IsSnapToTickEnabled="True" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Mask expand / contract" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="HaloMaskValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloMaskSlider" Minimum="-4" Maximum="4" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Halo removal" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="HaloRemovalValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloRemovalSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Color decontamination" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="HaloDecontamValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloDecontamSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Fine detail recovery" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="HaloDetailValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloDetailSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
 
                         <Separator Margin="0,13,0,10" />
-                        <DockPanel>
-                            <TextBlock Text="COMPOSITE REALISM" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <CheckBox x:Name="RealismEnabledCheckBox" DockPanel.Dock="Right" Content="ON" IsChecked="True" VerticalAlignment="Center" Checked="RealismControl_Changed" Unchecked="RealismControl_Changed" />
-                        </DockPanel>
+                        <DockPanel><TextBlock Text="COMPOSITE REALISM" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" /><CheckBox x:Name="RealismEnabledCheckBox" DockPanel.Dock="Right" Content="ON" IsChecked="True" VerticalAlignment="Center" Checked="RealismControl_Changed" Unchecked="RealismControl_Changed" /></DockPanel>
                         <TextBlock Text="Match the vehicle's light, color, focus and texture to the selected scene." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,5,0,8" />
-                        <UniformGrid Columns="2" Margin="0,0,0,3">
-                            <Button Content="AUTO MATCH" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoLightMatch_Click" />
-                            <Button Content="RESET MATCH" Margin="4,0,0,6" Click="ResetRealism_Click" />
-                        </UniformGrid>
+                        <UniformGrid Columns="2" Margin="0,0,0,3"><Button Content="AUTO MATCH" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoLightMatch_Click" /><Button Content="RESET MATCH" Margin="4,0,0,6" Click="ResetRealism_Click" /></UniformGrid>
                         <TextBlock x:Name="SceneAnalysisText" Text="Scene analysis: not sampled" Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,7" />
-
-                        <TextBlock Text="Brightness" FontWeight="SemiBold" Margin="0,5,0,2" />
-                        <DockPanel><TextBlock x:Name="RealismBrightnessValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismBrightnessSlider" Minimum="-35" Maximum="35" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Contrast" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="RealismContrastValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismContrastSlider" Minimum="-35" Maximum="35" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Temperature" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="RealismTemperatureValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismTemperatureSlider" Minimum="-40" Maximum="40" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Tint" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="RealismTintValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismTintSlider" Minimum="-30" Maximum="30" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Saturation" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="RealismSaturationValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismSaturationSlider" Minimum="-35" Maximum="35" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Ground color bounce" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="GroundBounceValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="GroundBounceSlider" Minimum="0" Maximum="60" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Sky fill" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="SkyFillValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="SkyFillSlider" Minimum="0" Maximum="60" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Depth-of-field match" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="DofMatchValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="DofMatchSlider" Minimum="0" Maximum="8" Value="0" TickFrequency="0.5" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
-                        <TextBlock Text="Noise match" FontWeight="SemiBold" Margin="0,8,0,2" />
-                        <DockPanel><TextBlock x:Name="NoiseMatchValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="NoiseMatchSlider" Minimum="0" Maximum="20" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Brightness" FontWeight="SemiBold" Margin="0,5,0,2" /><DockPanel><TextBlock x:Name="RealismBrightnessValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismBrightnessSlider" Minimum="-35" Maximum="35" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Contrast" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="RealismContrastValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismContrastSlider" Minimum="-35" Maximum="35" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Temperature" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="RealismTemperatureValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismTemperatureSlider" Minimum="-40" Maximum="40" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Tint" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="RealismTintValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismTintSlider" Minimum="-30" Maximum="30" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Saturation" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="RealismSaturationValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RealismSaturationSlider" Minimum="-35" Maximum="35" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Ground color bounce" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="GroundBounceValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="GroundBounceSlider" Minimum="0" Maximum="60" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Sky fill" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="SkyFillValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="SkyFillSlider" Minimum="0" Maximum="60" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Depth-of-field match" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="DofMatchValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="DofMatchSlider" Minimum="0" Maximum="8" Value="0" TickFrequency="0.5" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
+                        <TextBlock Text="Noise match" FontWeight="SemiBold" Margin="0,8,0,2" /><DockPanel><TextBlock x:Name="NoiseMatchValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="NoiseMatchSlider" Minimum="0" Maximum="20" Value="0" ValueChanged="RealismSlider_ValueChanged" /></DockPanel>
 
                         <Button x:Name="CompareButton" Content="COMPARE ORIGINAL" Margin="0,14,0,7" Click="CompareButton_Click" />
                         <Button Content="SAVE PROJECT" Margin="0,0,0,7" Click="SaveProject_Click" />
