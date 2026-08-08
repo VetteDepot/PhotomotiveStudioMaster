@@ -124,7 +124,69 @@ public sealed class ImportService
         return result;
     }
 
+    public QueueTrashResult MoveJobsToTrash(EventRecord activeEvent, IReadOnlyList<ImportRecord> jobs)
+    {
+        var result = new QueueTrashResult();
+        if (jobs.Count == 0)
+            return result;
+
+        if (jobs.Any(x => x.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase)))
+        {
+            result.ErrorMessages.Add("One or more selected jobs are currently extracting. Wait for extraction to finish before removing them.");
+            return result;
+        }
+
+        var batchFolder = Path.Combine(
+            activeEvent.RootFolder,
+            "99_Trash",
+            DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+
+        try
+        {
+            foreach (var job in jobs)
+            {
+                var jobFolder = Path.Combine(batchFolder, job.JobNumber);
+                MoveIfExists(job.StoredPath, Path.Combine(jobFolder, "Original"));
+                MoveIfExists(job.ExtractionPath, Path.Combine(jobFolder, "Extracted"));
+
+                var finishedFolder = Path.Combine(activeEvent.RootFolder, "05_Finished");
+                if (Directory.Exists(finishedFolder))
+                {
+                    foreach (var finishedPath in Directory.GetFiles(finishedFolder, job.JobNumber + "_Finished.*"))
+                        MoveIfExists(finishedPath, Path.Combine(jobFolder, "Finished"));
+                }
+            }
+
+            _repository.DeleteByIds(jobs.Select(x => x.Id));
+            result.Removed = jobs.Count;
+            result.TrashFolder = batchFolder;
+        }
+        catch (Exception ex)
+        {
+            result.ErrorMessages.Add(ex.Message);
+        }
+
+        return result;
+    }
+
     public IReadOnlyList<ImportRecord> GetImportedJobs(long eventId) => _repository.GetByEvent(eventId);
+
+    private static void MoveIfExists(string? sourcePath, string destinationFolder)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+            return;
+
+        Directory.CreateDirectory(destinationFolder);
+        var destinationPath = Path.Combine(destinationFolder, Path.GetFileName(sourcePath));
+        if (File.Exists(destinationPath))
+        {
+            var stem = Path.GetFileNameWithoutExtension(destinationPath);
+            var extension = Path.GetExtension(destinationPath);
+            destinationPath = Path.Combine(destinationFolder, $"{stem}_{DateTime.Now:HHmmssfff}{extension}");
+        }
+
+        File.Move(sourcePath, destinationPath);
+    }
 
     private static async Task<string> ComputeSha256Async(string path, CancellationToken cancellationToken)
     {
@@ -168,4 +230,12 @@ public sealed class ImportBatchResult
     public int Duplicates { get; set; }
     public int Errors { get; set; }
     public List<string> ErrorMessages { get; } = new();
+}
+
+public sealed class QueueTrashResult
+{
+    public int Removed { get; set; }
+    public string TrashFolder { get; set; } = string.Empty;
+    public List<string> ErrorMessages { get; } = new();
+    public bool Success => ErrorMessages.Count == 0;
 }
