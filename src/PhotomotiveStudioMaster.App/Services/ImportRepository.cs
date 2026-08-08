@@ -79,9 +79,20 @@ public sealed class ImportRepository
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
         var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM Imports WHERE EventId = $eventId;";
+        command.CommandText = "SELECT JobNumber FROM Imports WHERE EventId = $eventId;";
         command.Parameters.AddWithValue("$eventId", eventId);
-        return Convert.ToInt32(command.ExecuteScalar()) + 1;
+
+        var maxSequence = 0;
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var jobNumber = reader.GetString(0);
+            var dash = jobNumber.LastIndexOf('-');
+            if (dash >= 0 && int.TryParse(jobNumber[(dash + 1)..], out var sequence))
+                maxSequence = Math.Max(maxSequence, sequence);
+        }
+
+        return maxSequence + 1;
     }
 
     public void Add(ImportRecord record)
