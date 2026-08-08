@@ -146,14 +146,14 @@ public sealed class ImportService
             foreach (var job in jobs)
             {
                 var jobFolder = Path.Combine(batchFolder, job.JobNumber);
-                MoveIfExists(job.StoredPath, Path.Combine(jobFolder, "Original"));
-                MoveIfExists(job.ExtractionPath, Path.Combine(jobFolder, "Extracted"));
+                CopyThenDeleteIfExists(job.StoredPath, Path.Combine(jobFolder, "Original"));
+                CopyThenDeleteIfExists(job.ExtractionPath, Path.Combine(jobFolder, "Extracted"));
 
                 var finishedFolder = Path.Combine(activeEvent.RootFolder, "05_Finished");
                 if (Directory.Exists(finishedFolder))
                 {
                     foreach (var finishedPath in Directory.GetFiles(finishedFolder, job.JobNumber + "_Finished.*"))
-                        MoveIfExists(finishedPath, Path.Combine(jobFolder, "Finished"));
+                        CopyThenDeleteIfExists(finishedPath, Path.Combine(jobFolder, "Finished"));
                 }
             }
 
@@ -171,7 +171,7 @@ public sealed class ImportService
 
     public IReadOnlyList<ImportRecord> GetImportedJobs(long eventId) => _repository.GetByEvent(eventId);
 
-    private static void MoveIfExists(string? sourcePath, string destinationFolder)
+    private static void CopyThenDeleteIfExists(string? sourcePath, string destinationFolder)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
             return;
@@ -185,7 +185,30 @@ public sealed class ImportService
             destinationPath = Path.Combine(destinationFolder, $"{stem}_{DateTime.Now:HHmmssfff}{extension}");
         }
 
-        File.Move(sourcePath, destinationPath);
+        try
+        {
+            var attributes = File.GetAttributes(sourcePath);
+            if ((attributes & FileAttributes.ReadOnly) != 0)
+                File.SetAttributes(sourcePath, attributes & ~FileAttributes.ReadOnly);
+
+            File.Copy(sourcePath, destinationPath, overwrite: false);
+
+            var sourceInfo = new FileInfo(sourcePath);
+            var destinationInfo = new FileInfo(destinationPath);
+            if (!destinationInfo.Exists || destinationInfo.Length != sourceInfo.Length)
+            {
+                try { if (destinationInfo.Exists) File.Delete(destinationPath); } catch { }
+                throw new IOException($"Trash copy verification failed for:\n{sourcePath}");
+            }
+
+            File.Delete(sourcePath);
+        }
+        catch (Exception ex)
+        {
+            throw new IOException(
+                $"Could not move this file to the event Trash folder:\n\nSOURCE:\n{sourcePath}\n\nDESTINATION:\n{destinationPath}\n\nWindows reported: {ex.Message}",
+                ex);
+        }
     }
 
     private static async Task<string> ComputeSha256Async(string path, CancellationToken cancellationToken)
