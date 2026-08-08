@@ -85,7 +85,6 @@ public partial class ProductionWindow : Window
             }
             catch
             {
-                // Unavailable files are ignored; the import result reports any later failures.
             }
         }
 
@@ -211,6 +210,16 @@ public partial class ProductionWindow : Window
 
     private void RemoveJobs(IReadOnlyList<ImportRecord> jobs)
     {
+        // Release WPF preview references before touching the underlying files.
+        OriginalPreviewImage.Source = null;
+        ExtractedPreviewImage.Source = null;
+        PreviewStatusText.Text = string.Empty;
+
+        // Give any decoder/finalizer objects a chance to release their file handles.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
         var result = _importService.MoveJobsToTrash(_activeEvent, jobs);
         if (!result.Success)
         {
@@ -219,6 +228,7 @@ public partial class ProductionWindow : Window
                 "Queue Cleanup Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
+            UpdateSelectedJobState();
             return;
         }
 
