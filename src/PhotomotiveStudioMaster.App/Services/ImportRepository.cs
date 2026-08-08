@@ -131,6 +131,28 @@ public sealed class ImportRepository
         command.ExecuteNonQuery();
     }
 
+    public void DeleteByIds(IEnumerable<long> ids)
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+            return;
+
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        foreach (var id in idList)
+        {
+            var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "DELETE FROM Imports WHERE Id = $id;";
+            command.Parameters.AddWithValue("$id", id);
+            command.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+    }
+
     public IReadOnlyList<ImportRecord> GetByEvent(long eventId)
     {
         var results = new List<ImportRecord>();
