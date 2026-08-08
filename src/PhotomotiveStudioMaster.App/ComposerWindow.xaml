@@ -7,6 +7,7 @@
         MinWidth="1240"
         MinHeight="780"
         WindowStartupLocation="CenterOwner"
+        Loaded="ComposerWindow_Loaded"
         KeyDown="Window_KeyDown"
         Closing="Window_Closing">
     <Grid Margin="18">
@@ -24,6 +25,7 @@
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="AUTO POSITION" Width="130" Margin="0,0,8,0" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoPosition_Click" />
                 <Button Content="AUTO SHADOW" Width="120" Margin="0,0,8,0" Click="AutoShadow_Click" />
+                <Button Content="AUTO HALO REPAIR" Width="140" Margin="0,0,8,0" Click="AutoHaloRepair_Click" />
                 <Button Content="SAVE PROJECT" Width="120" Margin="0,0,10,0" Click="SaveProject_Click" />
                 <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="9" Padding="12,8">
                     <StackPanel>
@@ -40,7 +42,7 @@
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="290" />
+                <ColumnDefinition Width="305" />
             </Grid.ColumnDefinitions>
 
             <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="11" Padding="12">
@@ -105,6 +107,9 @@
                             <Border x:Name="CompareBadge" Background="{StaticResource AccentBrush}" CornerRadius="5" Padding="7,2" Margin="9,-2,0,0" Visibility="Collapsed">
                                 <TextBlock Text="ORIGINAL" FontSize="9" FontWeight="Bold" />
                             </Border>
+                            <Border x:Name="HaloBadge" Background="#B0006DFF" CornerRadius="5" Padding="7,2" Margin="7,-2,0,0" Visibility="Collapsed">
+                                <TextBlock Text="HALO OVERLAY" FontSize="9" FontWeight="Bold" />
+                            </Border>
                         </StackPanel>
                         <TextBlock x:Name="SelectedBackgroundText" DockPanel.Dock="Right" Foreground="{StaticResource TextMutedBrush}" />
                     </DockPanel>
@@ -127,6 +132,16 @@
                                        MouseLeftButtonDown="CarPreviewImage_MouseLeftButtonDown"
                                        MouseMove="CarPreviewImage_MouseMove"
                                        MouseLeftButtonUp="CarPreviewImage_MouseLeftButtonUp" />
+                                <Image x:Name="HaloOverlayImage"
+                                       IsHitTestVisible="False"
+                                       Stretch="Fill"
+                                       RenderTransformOrigin="0.5,0.5"
+                                       Visibility="Collapsed"
+                                       Width="{Binding ActualWidth, ElementName=CarPreviewImage}"
+                                       Height="{Binding ActualHeight, ElementName=CarPreviewImage}"
+                                       Canvas.Left="{Binding Path=(Canvas.Left), ElementName=CarPreviewImage}"
+                                       Canvas.Top="{Binding Path=(Canvas.Top), ElementName=CarPreviewImage}"
+                                       RenderTransform="{Binding RenderTransform, ElementName=CarPreviewImage}" />
                             </Canvas>
                             <Image x:Name="OriginalPreviewImage" Width="800" Height="640" Stretch="UniformToFill" Visibility="Collapsed" IsHitTestVisible="False" />
                             <Border BorderBrush="#44FFFFFF" BorderThickness="1" IsHitTestVisible="False" />
@@ -191,6 +206,32 @@
 
                         <TextBlock Text="Tire contact" FontWeight="SemiBold" Margin="0,8,0,2" />
                         <DockPanel><TextBlock x:Name="ContactShadowValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ContactShadowSlider" Minimum="0" Maximum="100" Value="58" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <Separator Margin="0,13,0,10" />
+                        <DockPanel>
+                            <TextBlock Text="HALO INSPECTOR" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <CheckBox x:Name="HaloOverlayCheckBox" DockPanel.Dock="Right" Content="OVERLAY" VerticalAlignment="Center" Checked="HaloOverlay_Changed" Unchecked="HaloOverlay_Changed" />
+                        </DockPanel>
+                        <TextBlock Text="Non-destructive edge cleanup for white/dark fringes and color spill." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,5,0,8" />
+                        <UniformGrid Columns="2" Margin="0,0,0,3">
+                            <Button Content="AUTO REPAIR" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoHaloRepair_Click" />
+                            <Button Content="RESET EDGES" Margin="4,0,0,6" Click="ResetHalo_Click" />
+                        </UniformGrid>
+
+                        <TextBlock Text="Edge feather" FontWeight="SemiBold" Margin="0,6,0,2" />
+                        <DockPanel><TextBlock x:Name="HaloFeatherValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloFeatherSlider" Minimum="0" Maximum="4" Value="0" TickFrequency="0.5" IsSnapToTickEnabled="True" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Mask expand / contract" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="HaloMaskValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloMaskSlider" Minimum="-4" Maximum="4" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Halo removal" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="HaloRemovalValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloRemovalSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Color decontamination" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="HaloDecontamValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloDecontamSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Fine detail recovery" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="HaloDetailValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="HaloDetailSlider" Minimum="0" Maximum="100" Value="0" ValueChanged="HaloSlider_ValueChanged" /></DockPanel>
 
                         <Button x:Name="CompareButton" Content="COMPARE ORIGINAL" Margin="0,14,0,7" Click="CompareButton_Click" />
                         <Button Content="SAVE PROJECT" Margin="0,0,0,7" Click="SaveProject_Click" />
