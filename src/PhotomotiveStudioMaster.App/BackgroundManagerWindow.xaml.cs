@@ -32,9 +32,15 @@ public partial class BackgroundManagerWindow : Window
     private void RefreshCategories()
     {
         var current = CategoryList.SelectedItem?.ToString() ?? "All";
-        CategoryList.ItemsSource = _library.GetCategories();
+        var categories = _library.GetCategories();
+        CategoryList.ItemsSource = categories;
         CategoryList.SelectedItem = CategoryList.Items.Cast<string>()
             .FirstOrDefault(x => x.Equals(current, StringComparison.OrdinalIgnoreCase)) ?? "All";
+
+        var assignableCategories = categories
+            .Where(x => x is not "All" and not "Favorites" and not "Recent")
+            .ToList();
+        CategoryBox.ItemsSource = assignableCategories;
     }
 
     private void RefreshLibrary()
@@ -133,14 +139,15 @@ public partial class BackgroundManagerWindow : Window
         if (_selected is null)
             return;
 
-        if (string.IsNullOrWhiteSpace(NameBox.Text) || string.IsNullOrWhiteSpace(CategoryBox.Text))
+        var category = CategoryBox.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(NameBox.Text) || string.IsNullOrWhiteSpace(category))
         {
             MessageBox.Show("Name and category are required.", "Background Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         _selected.Name = NameBox.Text.Trim();
-        _selected.Category = CategoryBox.Text.Trim();
+        _selected.Category = category;
         _selected.Tags = TagsBox.Text.Trim();
         _library.SaveMetadata(_selected);
         StatusText.Text = $"Saved metadata for {_selected.Name}.";
