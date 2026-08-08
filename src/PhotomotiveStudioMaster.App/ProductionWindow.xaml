@@ -33,16 +33,18 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="250" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="Source card" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <TextBlock Text="SD card" VerticalAlignment="Center" Margin="0,0,12,0" />
                 <ComboBox x:Name="DriveCombo" Grid.Column="1" DisplayMemberPath="DisplayName" MinHeight="34" />
-                <Button Grid.Column="2" Content="SCAN CARD" Width="120" Margin="12,0,0,0" Background="{StaticResource AccentBrush}" Click="ScanCard_Click" />
-                <TextBlock x:Name="ScanSummaryText" Grid.Column="3" VerticalAlignment="Center" Margin="18,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
-                <Button x:Name="ImportButton" Grid.Column="4" Content="IMPORT ALL" Width="130" IsEnabled="False" Click="ImportAll_Click" />
+                <Button Grid.Column="2" Content="SCAN CARD" Width="120" Margin="12,0,0,0" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="ScanCard_Click" />
+                <Button x:Name="AddLocalPhotosButton" Grid.Column="3" Content="ADD LOCAL PHOTOS" Width="160" Margin="10,0,0,0" Click="AddLocalPhotos_Click" />
+                <TextBlock x:Name="ScanSummaryText" Grid.Column="4" VerticalAlignment="Center" Margin="18,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                <Button x:Name="ImportButton" Grid.Column="5" Content="IMPORT ALL" Width="130" IsEnabled="False" Click="ImportAll_Click" />
             </Grid>
         </Border>
 
@@ -60,7 +62,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,12">
-                        <TextBlock Text="CARD CONTENTS" FontWeight="Bold" FontSize="12" />
+                        <TextBlock Text="IMPORT SELECTION" FontWeight="Bold" FontSize="12" />
                         <TextBlock x:Name="CandidateCountText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" />
                     </DockPanel>
                     <DataGrid x:Name="CandidateGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
@@ -169,7 +171,7 @@
                     <ColumnDefinition Width="285" />
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock x:Name="StatusText" Text="Insert an SD card, refresh drives, then scan the card." />
+                    <TextBlock x:Name="StatusText" Text="Scan an SD card or add photos from this computer." />
                     <TextBlock x:Name="DetailText" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,4,0,0" />
                     <TextBlock x:Name="ExtractionDetailText" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,4,0,0" />
                 </StackPanel>
