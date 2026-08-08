@@ -20,6 +20,7 @@ public partial class ComposerWindow : Window
     private readonly EventRecord _activeEvent;
     private readonly ImportRecord _job;
     private readonly BackgroundLibraryService _backgroundService = new();
+    private readonly ImportRepository _importRepository = new();
     private BackgroundRecord? _selectedBackground;
     private BitmapSource? _vehicleBitmap;
     private BitmapSource? _originalBitmap;
@@ -280,6 +281,8 @@ public partial class ComposerWindow : Window
                 encoder.Save(stream);
 
             _backgroundService.MarkUsed(_selectedBackground);
+            _importRepository.UpdateStatus(_job.Id, "Finished");
+            _job.Status = "Finished";
             ComposerStatusText.Text = $"Finished photo saved: {_job.JobNumber}";
             ComposerDetailText.Text = outputPath;
 
