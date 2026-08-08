@@ -15,8 +15,11 @@ public partial class ComposerWindow
     {
         ComposerWindow_Phase7Loaded(sender, e);
 
+        _restoringReflectionState = true;
         ReflectionModeCombo.ItemsSource = new[] { "Glass", "Water" };
         ReflectionModeCombo.SelectedItem = "Glass";
+        ReflectionEnabledCheckBox.IsChecked = false;
+        _restoringReflectionState = false;
 
         TryRestoreReflectionState();
         UpdateReflectionValueLabels();
