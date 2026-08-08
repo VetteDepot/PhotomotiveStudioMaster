@@ -241,13 +241,13 @@ public partial class ComposerWindow : Window
         ShadowAngleSlider.Value = 0;
         ShadowXSlider.Value = 0;
         ShadowYSlider.Value = 0;
-        ContactShadowSlider.Value = 62;
+        ContactShadowSlider.Value = 68;
         UpdateShadowPreview();
 
         if (showStatus)
         {
-            ComposerStatusText.Text = "Auto Shadow created from the vehicle footprint.";
-            ComposerDetailText.Text = "Adjust width, length, angle, softness, opacity, offsets, and tire contact as needed.";
+            ComposerStatusText.Text = "Auto Shadow anchored to the detected tire contact points.";
+            ComposerDetailText.Text = "The front and rear tire contacts are detected from the vehicle alpha edge; Angle now acts as a fine adjustment from that natural tire line.";
         }
     }
 
@@ -261,7 +261,7 @@ public partial class ComposerWindow : Window
         ShadowAngleSlider.Value = 0;
         ShadowXSlider.Value = 0;
         ShadowYSlider.Value = 0;
-        ContactShadowSlider.Value = 55;
+        ContactShadowSlider.Value = 60;
         UpdateShadowPreview();
         ComposerStatusText.Text = "Shadow controls reset.";
     }
@@ -291,11 +291,12 @@ public partial class ComposerWindow : Window
         GroundShadowEllipse.Height = geometry.Ground.Height;
         GroundShadowEllipse.Opacity = ShadowOpacitySlider.Value / 100.0;
         GroundShadowBlur.Radius = ShadowSoftnessSlider.Value;
-        GroundShadowEllipse.RenderTransform = new RotateTransform(ShadowAngleSlider.Value);
+        GroundShadowEllipse.RenderTransformOrigin = new Point(0.5, 0.5);
+        GroundShadowEllipse.RenderTransform = new RotateTransform(geometry.AngleDegrees);
         Canvas.SetLeft(GroundShadowEllipse, geometry.Ground.Left);
         Canvas.SetTop(GroundShadowEllipse, geometry.Ground.Top);
 
-        var contactOpacity = ContactShadowSlider.Value / 100.0 * 0.78;
+        var contactOpacity = ContactShadowSlider.Value / 100.0 * 0.82;
         LeftContactShadow.Width = geometry.LeftContact.Width;
         LeftContactShadow.Height = geometry.LeftContact.Height;
         LeftContactShadow.Opacity = contactOpacity;
@@ -311,22 +312,157 @@ public partial class ComposerWindow : Window
 
     private ShadowGeometry GetShadowGeometry(Rect vehicle, double scaleFactor)
     {
-        var shadowWidth = vehicle.Width * ShadowWidthSlider.Value / 100.0;
-        var shadowHeight = vehicle.Height * (0.10 + ShadowLengthSlider.Value / 100.0 * 0.30);
-        var centerX = vehicle.Left + vehicle.Width / 2.0 + ShadowXSlider.Value * scaleFactor;
-        var centerY = vehicle.Top + vehicle.Height * 0.90 + ShadowYSlider.Value * scaleFactor;
-        var ground = new Rect(centerX - shadowWidth / 2.0, centerY - shadowHeight / 2.0, shadowWidth, shadowHeight);
+        var contacts = DetectTireContacts(_vehicleBitmap);
 
-        var contactWidth = Math.Max(14 * scaleFactor, vehicle.Width * 0.16);
-        var contactHeight = Math.Max(5 * scaleFactor, vehicle.Height * 0.035);
-        var contactY = vehicle.Top + vehicle.Height * 0.955 + ShadowYSlider.Value * scaleFactor - contactHeight / 2.0;
-        var leftCenter = vehicle.Left + vehicle.Width * 0.24 + ShadowXSlider.Value * scaleFactor;
-        var rightCenter = vehicle.Left + vehicle.Width * 0.76 + ShadowXSlider.Value * scaleFactor;
+        var rearX = vehicle.Left + vehicle.Width * contacts.LeftX + ShadowXSlider.Value * scaleFactor;
+        var frontX = vehicle.Left + vehicle.Width * contacts.RightX + ShadowXSlider.Value * scaleFactor;
+        var rearY = vehicle.Top + vehicle.Height * contacts.LeftY + ShadowYSlider.Value * scaleFactor;
+        var frontY = vehicle.Top + vehicle.Height * contacts.RightY + ShadowYSlider.Value * scaleFactor;
 
-        return new ShadowGeometry(
-            ground,
-            new Rect(leftCenter - contactWidth / 2.0, contactY, contactWidth, contactHeight),
-            new Rect(rightCenter - contactWidth / 2.0, contactY, contactWidth, contactHeight));
+        var dx = Math.Max(1.0, frontX - rearX);
+        var naturalAngle = Math.Atan2(frontY - rearY, dx) * 180.0 / Math.PI;
+        var finalAngle = naturalAngle + ShadowAngleSlider.Value;
+
+        var axleSpan = Math.Max(vehicle.Width * 0.30, frontX - rearX);
+        var widthFactor = Math.Clamp(ShadowWidthSlider.Value / 100.0, 0.35, 1.35);
+        var groundWidth = axleSpan * (1.08 + 0.34 * widthFactor);
+        var groundHeight = vehicle.Height * (0.055 + ShadowLengthSlider.Value / 100.0 * 0.22);
+        var centerX = (rearX + frontX) / 2.0;
+        var centerY = (rearY + frontY) / 2.0 + groundHeight * 0.12;
+        var ground = new Rect(centerX - groundWidth / 2.0, centerY - groundHeight / 2.0, groundWidth, groundHeight);
+
+        var contactWidth = Math.Max(12 * scaleFactor, vehicle.Width * 0.115);
+        var contactHeight = Math.Max(4 * scaleFactor, vehicle.Height * 0.025);
+        var leftContact = new Rect(rearX - contactWidth / 2.0, rearY - contactHeight * 0.42, contactWidth, contactHeight);
+        var rightContact = new Rect(frontX - contactWidth / 2.0, frontY - contactHeight * 0.42, contactWidth, contactHeight);
+
+        return new ShadowGeometry(ground, leftContact, rightContact, finalAngle);
+    }
+
+    private static TireContactRatios DetectTireContacts(BitmapSource? source)
+    {
+        if (source is null)
+            return new TireContactRatios(0.20, 0.62, 0.94, 0.94);
+
+        try
+        {
+            BitmapSource bgra = source;
+            if (source.Format != PixelFormats.Bgra32 && source.Format != PixelFormats.Pbgra32)
+            {
+                var converted = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+                converted.Freeze();
+                bgra = converted;
+            }
+
+            var width = bgra.PixelWidth;
+            var height = bgra.PixelHeight;
+            var stride = width * 4;
+            var pixels = new byte[stride * height];
+            bgra.CopyPixels(pixels, stride, 0);
+
+            var bottom = new int[width];
+            Array.Fill(bottom, -1);
+            var absoluteBottom = -1;
+
+            for (var x = 0; x < width; x++)
+            {
+                for (var y = height - 1; y >= 0; y--)
+                {
+                    if (pixels[y * stride + x * 4 + 3] < 48)
+                        continue;
+
+                    bottom[x] = y;
+                    absoluteBottom = Math.Max(absoluteBottom, y);
+                    break;
+                }
+            }
+
+            if (absoluteBottom < 0)
+                return new TireContactRatios(0.20, 0.62, 0.94, 0.94);
+
+            var tolerance = Math.Max(3, (int)Math.Round(height * 0.075));
+            var candidate = new bool[width];
+            for (var x = 0; x < width; x++)
+                candidate[x] = bottom[x] >= absoluteBottom - tolerance;
+
+            var clusters = new List<(int Start, int End, int PeakY, double Score)>();
+            var start = -1;
+            for (var x = 0; x <= width; x++)
+            {
+                var active = x < width && candidate[x];
+                if (active && start < 0)
+                {
+                    start = x;
+                    continue;
+                }
+
+                if (active || start < 0)
+                    continue;
+
+                var end = x - 1;
+                var runWidth = end - start + 1;
+                if (runWidth >= Math.Max(3, width / 120))
+                {
+                    var peakY = -1;
+                    var depthSum = 0.0;
+                    for (var xx = start; xx <= end; xx++)
+                    {
+                        peakY = Math.Max(peakY, bottom[xx]);
+                        if (bottom[xx] >= 0)
+                            depthSum += bottom[xx];
+                    }
+
+                    var avgDepth = depthSum / Math.Max(1, runWidth);
+                    var score = runWidth * 1.8 + avgDepth / Math.Max(1, height) * width * 0.10;
+                    clusters.Add((start, end, peakY, score));
+                }
+
+                start = -1;
+            }
+
+            if (clusters.Count < 2)
+                return new TireContactRatios(0.20, 0.62, 0.94, 0.94);
+
+            var bestPair = (A: clusters[0], B: clusters[1], Score: double.MinValue);
+            for (var i = 0; i < clusters.Count; i++)
+            {
+                for (var j = i + 1; j < clusters.Count; j++)
+                {
+                    var aCenter = (clusters[i].Start + clusters[i].End) / 2.0;
+                    var bCenter = (clusters[j].Start + clusters[j].End) / 2.0;
+                    var separation = Math.Abs(bCenter - aCenter) / Math.Max(1.0, width);
+                    if (separation < 0.22)
+                        continue;
+
+                    var pairScore = clusters[i].Score + clusters[j].Score + separation * width * 0.65;
+                    if (pairScore > bestPair.Score)
+                        bestPair = (clusters[i], clusters[j], pairScore);
+                }
+            }
+
+            if (bestPair.Score == double.MinValue)
+                return new TireContactRatios(0.20, 0.62, 0.94, 0.94);
+
+            var first = bestPair.A;
+            var second = bestPair.B;
+            if (first.Start > second.Start)
+                (first, second) = (second, first);
+
+            var leftX = ((first.Start + first.End) / 2.0) / Math.Max(1, width - 1);
+            var rightX = ((second.Start + second.End) / 2.0) / Math.Max(1, width - 1);
+            var leftY = first.PeakY / (double)Math.Max(1, height - 1);
+            var rightY = second.PeakY / (double)Math.Max(1, height - 1);
+
+            return new TireContactRatios(
+                Math.Clamp(leftX, 0.08, 0.48),
+                Math.Clamp(rightX, 0.42, 0.92),
+                Math.Clamp(leftY, 0.80, 0.995),
+                Math.Clamp(rightY, 0.80, 0.995));
+        }
+        catch
+        {
+            return new TireContactRatios(0.20, 0.62, 0.94, 0.94);
+        }
     }
 
     private void CarPreviewImage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -609,15 +745,15 @@ public partial class ComposerWindow : Window
 
         var groundBrush = CreateSoftShadowBrush(opacity, softness);
         var groundCenter = new Point(geometry.Ground.Left + geometry.Ground.Width / 2.0, geometry.Ground.Top + geometry.Ground.Height / 2.0);
-        dc.PushTransform(new RotateTransform(ShadowAngleSlider.Value, groundCenter.X, groundCenter.Y));
+        dc.PushTransform(new RotateTransform(geometry.AngleDegrees, groundCenter.X, groundCenter.Y));
         dc.DrawEllipse(groundBrush, null, groundCenter, geometry.Ground.Width / 2.0, geometry.Ground.Height / 2.0);
         dc.Pop();
 
-        var contactOpacity = Math.Clamp(ContactShadowSlider.Value / 100.0 * 0.78, 0, 0.82);
+        var contactOpacity = Math.Clamp(ContactShadowSlider.Value / 100.0 * 0.82, 0, 0.86);
         if (contactOpacity <= 0)
             return;
 
-        var contactBrush = CreateSoftShadowBrush(contactOpacity, 0.32);
+        var contactBrush = CreateSoftShadowBrush(contactOpacity, 0.28);
         DrawEllipseRect(dc, geometry.LeftContact, contactBrush);
         DrawEllipseRect(dc, geometry.RightContact, contactBrush);
     }
@@ -744,7 +880,8 @@ public partial class ComposerWindow : Window
         }
     }
 
-    private readonly record struct ShadowGeometry(Rect Ground, Rect LeftContact, Rect RightContact);
+    private readonly record struct ShadowGeometry(Rect Ground, Rect LeftContact, Rect RightContact, double AngleDegrees);
+    private readonly record struct TireContactRatios(double LeftX, double RightX, double LeftY, double RightY);
 
     private sealed class PhotoStudioProjectState
     {
