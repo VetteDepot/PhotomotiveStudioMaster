@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
@@ -43,6 +44,19 @@ public partial class ProductionWindow : Window
 
     private void ImportedGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         => UpdateSelectedJobState();
+
+    private void ProductionWindow_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Delete)
+            return;
+
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            ClearEvent_Click(sender, new RoutedEventArgs());
+        else
+            DeleteSelected_Click(sender, new RoutedEventArgs());
+
+        e.Handled = true;
+    }
 
     private async void AddLocalPhotos_Click(object sender, RoutedEventArgs e)
     {
@@ -134,11 +148,95 @@ public partial class ProductionWindow : Window
         }
     }
 
+    private void DeleteSelected_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedJobs = ImportedGrid.SelectedItems.Cast<ImportRecord>().ToList();
+        if (selectedJobs.Count == 0)
+            return;
+
+        if (selectedJobs.Any(x => x.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase)))
+        {
+            MessageBox.Show(
+                "One of the selected jobs is currently extracting. Wait for extraction to finish before removing it.",
+                "Cannot Remove Job",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var description = selectedJobs.Count == 1
+            ? $"Remove {selectedJobs[0].JobNumber} from the Production Queue?"
+            : $"Remove these {selectedJobs.Count} jobs from the Production Queue?";
+
+        var confirmation = MessageBox.Show(
+            description + "\n\nOriginal, extracted, and finished files will be moved to the event Trash folder. They will not be permanently deleted.",
+            "Remove Selected Jobs",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+
+        if (confirmation != MessageBoxResult.Yes)
+            return;
+
+        RemoveJobs(selectedJobs);
+    }
+
+    private void ClearEvent_Click(object sender, RoutedEventArgs e)
+    {
+        if (_importedJobs.Count == 0)
+            return;
+
+        if (_importedJobs.Any(x => x.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase)))
+        {
+            MessageBox.Show(
+                "A job is currently extracting. Wait for extraction to finish before clearing the event.",
+                "Cannot Clear Event",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            $"Clear all {_importedJobs.Count} jobs from this event?\n\nTheir original, extracted, and finished files will be moved to the event Trash folder. The event itself and its settings will remain.",
+            "Clear Event Processing Queue",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+
+        if (confirmation != MessageBoxResult.Yes)
+            return;
+
+        RemoveJobs(_importedJobs.ToList());
+    }
+
+    private void RemoveJobs(IReadOnlyList<ImportRecord> jobs)
+    {
+        var result = _importService.MoveJobsToTrash(_activeEvent, jobs);
+        if (!result.Success)
+        {
+            MessageBox.Show(
+                string.Join(Environment.NewLine, result.ErrorMessages),
+                "Queue Cleanup Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
+
+        RefreshImportedJobs();
+        StatusText.Text = result.Removed == 1
+            ? "1 job removed from the Production Queue."
+            : $"{result.Removed} jobs removed from the Production Queue.";
+        DetailText.Text = string.IsNullOrWhiteSpace(result.TrashFolder)
+            ? "Files were removed from the active queue."
+            : $"Files moved to: {result.TrashFolder}";
+        SetProgressState("Queue cleanup complete", "SuccessBrush");
+    }
+
     private void OpenComposer_Click(object sender, RoutedEventArgs e)
     {
-        if (ImportedGrid.SelectedItem is not ImportRecord selected)
+        if (ImportedGrid.SelectedItems.Count != 1 || ImportedGrid.SelectedItem is not ImportRecord selected)
         {
-            MessageBox.Show("Select an event job first.", "Automotive Photo Studio", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Select one extracted event job first.", "Automotive Photo Studio", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -273,9 +371,9 @@ public partial class ProductionWindow : Window
 
     private async void ExtractSelected_Click(object sender, RoutedEventArgs e)
     {
-        if (ImportedGrid.SelectedItem is not ImportRecord selected)
+        if (ImportedGrid.SelectedItems.Count != 1 || ImportedGrid.SelectedItem is not ImportRecord selected)
         {
-            MessageBox.Show("Select an imported job first.", "Vehicle Extraction", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Select one imported job first.", "Vehicle Extraction", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -296,6 +394,8 @@ public partial class ProductionWindow : Window
         var selectedId = selected.Id;
         ExtractButton.IsEnabled = false;
         PhotoStudioButton.IsEnabled = false;
+        DeleteSelectedButton.IsEnabled = false;
+        ClearEventButton.IsEnabled = false;
         AddLocalPhotosButton.IsEnabled = false;
         StatusText.Text = $"Extracting vehicle from {selected.JobNumber}...";
         DetailText.Text = "Local AI processing is running. The first extraction may take longer while the model initializes.";
@@ -346,7 +446,13 @@ public partial class ProductionWindow : Window
 
     private void UpdateSelectedJobState()
     {
+        var selectedJobs = ImportedGrid.SelectedItems.Cast<ImportRecord>().ToList();
         var selected = ImportedGrid.SelectedItem as ImportRecord;
+        var anyBusy = _importedJobs.Any(x => x.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase));
+
+        DeleteSelectedButton.IsEnabled = selectedJobs.Count > 0 && !selectedJobs.Any(x => x.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase));
+        ClearEventButton.IsEnabled = _importedJobs.Count > 0 && !anyBusy;
+
         if (selected is null)
         {
             ExtractButton.IsEnabled = false;
@@ -365,12 +471,15 @@ public partial class ProductionWindow : Window
         PreviewStatusText.Text = hasExtraction ? "Ready" : "Not extracted";
 
         var isBusy = selected.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase);
-        ExtractButton.IsEnabled = !isBusy;
-        PhotoStudioButton.IsEnabled = hasExtraction && !isBusy;
+        var singleSelection = selectedJobs.Count == 1;
+        ExtractButton.IsEnabled = singleSelection && !isBusy;
+        PhotoStudioButton.IsEnabled = singleSelection && hasExtraction && !isBusy;
 
-        SelectedJobHintText.Text = hasExtraction
-            ? $"{selected.JobNumber}: extracted and ready for Photo Studio."
-            : $"{selected.JobNumber}: click Extract Selected to remove the current background.";
+        SelectedJobHintText.Text = selectedJobs.Count > 1
+            ? $"{selectedJobs.Count} jobs selected. Use Delete Selected to remove them from the active queue."
+            : hasExtraction
+                ? $"{selected.JobNumber}: extracted and ready for Photo Studio."
+                : $"{selected.JobNumber}: click Extract Selected to remove the current background.";
 
         if (selected.Status.Equals("Finished", StringComparison.OrdinalIgnoreCase))
         {
