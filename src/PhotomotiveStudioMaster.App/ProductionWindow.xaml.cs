@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PhotomotiveStudioMaster.App.Models;
 using PhotomotiveStudioMaster.App.Services;
@@ -134,13 +135,16 @@ public partial class ProductionWindow : Window
 
         ImportButton.IsEnabled = false;
         DriveCombo.IsEnabled = false;
+        ImportProgressBar.IsIndeterminate = false;
         ImportProgressBar.Value = 0;
+        SetProgressState("Importing photos…", "AccentBrush");
 
         var progress = new Progress<ImportProgress>(p =>
         {
             ImportProgressBar.Value = p.Total == 0 ? 0 : p.Current * 100.0 / p.Total;
             StatusText.Text = $"{p.Status}: {p.FileName}";
             DetailText.Text = $"File {p.Current} of {p.Total}";
+            ExtractionProgressText.Text = $"Importing {p.Current} of {p.Total}";
         });
 
         try
@@ -150,6 +154,7 @@ public partial class ProductionWindow : Window
             ImportProgressBar.Value = 100;
             StatusText.Text = $"Import complete: {result.Imported} imported, {result.Duplicates} duplicates skipped, {result.Errors} errors.";
             DetailText.Text = "Copied files were SHA-256 verified before being accepted into the event.";
+            SetProgressState(result.Errors == 0 ? "✓ Import complete" : "Import completed with errors", result.Errors == 0 ? "SuccessBrush" : "WarningBrush");
 
             if (result.Errors > 0)
             {
@@ -163,6 +168,7 @@ public partial class ProductionWindow : Window
         catch (Exception ex)
         {
             StatusText.Text = "Import stopped because of an unexpected error.";
+            SetProgressState("Import failed", "ErrorBrush");
             MessageBox.Show(ex.Message, "Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
@@ -199,8 +205,11 @@ public partial class ProductionWindow : Window
         PhotoStudioButton.IsEnabled = false;
         StatusText.Text = $"Extracting vehicle from {selected.JobNumber}...";
         DetailText.Text = "Local AI processing is running. The first extraction may take longer while the model initializes.";
-        PreviewStatusText.Text = "Extracting...";
+        PreviewStatusText.Text = "Extracting…";
+        ExtractedPreviewImage.Source = null;
+        ImportProgressBar.Value = 0;
         ImportProgressBar.IsIndeterminate = true;
+        SetProgressState("Extracting vehicle…", "AccentBrush");
 
         try
         {
@@ -211,21 +220,25 @@ public partial class ProductionWindow : Window
             {
                 StatusText.Text = $"Extraction failed for {selected.JobNumber}.";
                 DetailText.Text = result.ErrorMessage;
+                SetProgressState("Extraction failed", "ErrorBrush");
                 MessageBox.Show(result.ErrorMessage, "Vehicle Extraction Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 RefreshImportedJobs(selectedId);
                 return;
             }
 
+            ImportProgressBar.Value = 100;
             RefreshImportedJobs(selectedId);
             StatusText.Text = $"Vehicle extraction complete: {selected.JobNumber}";
             DetailText.Text = $"Transparent PNG saved to {result.OutputPath}";
             ExtractionDetailText.Text = "Extraction complete. Review the preview, then click Photo Studio.";
+            SetProgressState("✓ Vehicle extraction complete", "SuccessBrush");
         }
         catch (Exception ex)
         {
             ImportProgressBar.IsIndeterminate = false;
             StatusText.Text = "Vehicle extraction stopped unexpectedly.";
             DetailText.Text = ex.Message;
+            SetProgressState("Extraction failed", "ErrorBrush");
             MessageBox.Show(ex.Message, "Vehicle Extraction Error", MessageBoxButton.OK, MessageBoxImage.Error);
             RefreshImportedJobs(selectedId);
         }
@@ -247,12 +260,13 @@ public partial class ProductionWindow : Window
             ExtractedPreviewImage.Source = null;
             PreviewStatusText.Text = string.Empty;
             SelectedJobHintText.Text = "Select a job to begin.";
+            SetProgressState("Ready", "TextMutedBrush");
             return;
         }
 
         OriginalPreviewImage.Source = LoadPreview(selected.StoredPath);
         var hasExtraction = !string.IsNullOrWhiteSpace(selected.ExtractionPath) && File.Exists(selected.ExtractionPath);
-        ExtractedPreviewImage.Source = hasExtraction ? LoadPreview(selected.ExtractionPath) : null;
+        ExtractedPreviewImage.Source = hasExtraction ? LoadExtractedPreview(selected.ExtractionPath) : null;
         PreviewStatusText.Text = hasExtraction ? "Ready" : "Not extracted";
 
         var isBusy = selected.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase);
@@ -262,9 +276,40 @@ public partial class ProductionWindow : Window
         SelectedJobHintText.Text = hasExtraction
             ? $"{selected.JobNumber}: extracted and ready for Photo Studio."
             : $"{selected.JobNumber}: click Extract Selected to remove the current background.";
+
+        if (selected.Status.Equals("Finished", StringComparison.OrdinalIgnoreCase))
+        {
+            ImportProgressBar.IsIndeterminate = false;
+            ImportProgressBar.Value = 100;
+            SetProgressState("✓ Finished photo saved", "SuccessBrush");
+        }
+        else if (hasExtraction)
+        {
+            ImportProgressBar.IsIndeterminate = false;
+            ImportProgressBar.Value = 100;
+            SetProgressState("✓ Vehicle extraction complete", "SuccessBrush");
+        }
+        else if (isBusy)
+        {
+            ImportProgressBar.IsIndeterminate = true;
+            SetProgressState("Extracting vehicle…", "AccentBrush");
+        }
+        else
+        {
+            ImportProgressBar.IsIndeterminate = false;
+            ImportProgressBar.Value = 0;
+            SetProgressState("Ready to extract", "TextMutedBrush");
+        }
     }
 
-    private static BitmapImage? LoadPreview(string path)
+    private void SetProgressState(string text, string brushKey)
+    {
+        ExtractionProgressText.Text = text;
+        if (TryFindResource(brushKey) is Brush brush)
+            ExtractionProgressText.Foreground = brush;
+    }
+
+    private static BitmapSource? LoadPreview(string path)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return null;
@@ -275,7 +320,7 @@ public partial class ProductionWindow : Window
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.DecodePixelWidth = 720;
+            bitmap.DecodePixelWidth = 900;
             bitmap.StreamSource = stream;
             bitmap.EndInit();
             bitmap.Freeze();
@@ -284,6 +329,72 @@ public partial class ProductionWindow : Window
         catch
         {
             return null;
+        }
+    }
+
+    private static BitmapSource? LoadExtractedPreview(string path)
+    {
+        var bitmap = LoadPreview(path);
+        if (bitmap is null)
+            return null;
+
+        try
+        {
+            BitmapSource bgra = bitmap;
+            if (bitmap.Format != PixelFormats.Bgra32 && bitmap.Format != PixelFormats.Pbgra32)
+            {
+                var converted = new FormatConvertedBitmap(bitmap, PixelFormats.Bgra32, null, 0);
+                converted.Freeze();
+                bgra = converted;
+            }
+
+            var width = bgra.PixelWidth;
+            var height = bgra.PixelHeight;
+            var stride = width * 4;
+            var pixels = new byte[stride * height];
+            bgra.CopyPixels(pixels, stride, 0);
+
+            var minX = width;
+            var minY = height;
+            var maxX = -1;
+            var maxY = -1;
+
+            for (var y = 0; y < height; y++)
+            {
+                var row = y * stride;
+                for (var x = 0; x < width; x++)
+                {
+                    var alpha = pixels[row + x * 4 + 3];
+                    if (alpha <= 12)
+                        continue;
+
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+
+            if (maxX < minX || maxY < minY)
+                return bitmap;
+
+            var visibleWidth = maxX - minX + 1;
+            var visibleHeight = maxY - minY + 1;
+            var padX = Math.Max(8, (int)(visibleWidth * 0.08));
+            var padY = Math.Max(8, (int)(visibleHeight * 0.12));
+
+            minX = Math.Max(0, minX - padX);
+            minY = Math.Max(0, minY - padY);
+            maxX = Math.Min(width - 1, maxX + padX);
+            maxY = Math.Min(height - 1, maxY + padY);
+
+            var crop = new CroppedBitmap(bgra, new Int32Rect(minX, minY, maxX - minX + 1, maxY - minY + 1));
+            crop.Freeze();
+            return crop;
+        }
+        catch
+        {
+            return bitmap;
         }
     }
 
