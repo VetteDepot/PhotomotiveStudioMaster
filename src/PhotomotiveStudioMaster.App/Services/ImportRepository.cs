@@ -120,6 +120,17 @@ public sealed class ImportRepository
         command.ExecuteNonQuery();
     }
 
+    public void UpdateStatus(long id, string status)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Imports SET Status = $status WHERE Id = $id;";
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
     public IReadOnlyList<ImportRecord> GetByEvent(long eventId)
     {
         var results = new List<ImportRecord>();
