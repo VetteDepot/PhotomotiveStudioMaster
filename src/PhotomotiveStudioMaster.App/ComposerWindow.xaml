@@ -23,6 +23,7 @@
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="AUTO POSITION" Width="130" Margin="0,0,8,0" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoPosition_Click" />
+                <Button Content="AUTO SHADOW" Width="120" Margin="0,0,8,0" Click="AutoShadow_Click" />
                 <Button Content="SAVE PROJECT" Width="120" Margin="0,0,10,0" Click="SaveProject_Click" />
                 <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="9" Padding="12,8">
                     <StackPanel>
@@ -39,7 +40,7 @@
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="270" />
+                <ColumnDefinition Width="290" />
             </Grid.ColumnDefinitions>
 
             <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="11" Padding="12">
@@ -110,6 +111,17 @@
                     <Viewbox Grid.Row="1" Stretch="Uniform">
                         <Grid x:Name="PreviewCanvas" Width="800" Height="640" Background="#171C22" ClipToBounds="True" PreviewMouseWheel="PreviewCanvas_PreviewMouseWheel">
                             <Image x:Name="BackgroundPreviewImage" Width="800" Height="640" Stretch="UniformToFill" />
+                            <Canvas x:Name="ShadowCanvas" Width="800" Height="640" IsHitTestVisible="False">
+                                <Ellipse x:Name="GroundShadowEllipse" Fill="#D9000000" RenderTransformOrigin="0.5,0.5">
+                                    <Ellipse.Effect><BlurEffect x:Name="GroundShadowBlur" Radius="18" /></Ellipse.Effect>
+                                </Ellipse>
+                                <Ellipse x:Name="LeftContactShadow" Fill="#E6000000">
+                                    <Ellipse.Effect><BlurEffect Radius="5" /></Ellipse.Effect>
+                                </Ellipse>
+                                <Ellipse x:Name="RightContactShadow" Fill="#E6000000">
+                                    <Ellipse.Effect><BlurEffect Radius="5" /></Ellipse.Effect>
+                                </Ellipse>
+                            </Canvas>
                             <Canvas x:Name="VehicleCanvas" Width="800" Height="640">
                                 <Image x:Name="CarPreviewImage" RenderTransformOrigin="0.5,0.5" Cursor="SizeAll"
                                        MouseLeftButtonDown="CarPreviewImage_MouseLeftButtonDown"
@@ -127,37 +139,61 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="PLACEMENT" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="The car is cropped to its visible bounds for accurate placement." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,6,0,12" />
+                        <TextBlock Text="The car is cropped to its visible bounds for accurate placement." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,6,0,10" />
 
-                        <UniformGrid Columns="2" Margin="0,0,0,4">
+                        <UniformGrid Columns="2" Margin="0,0,0,3">
                             <Button Content="AUTO FIT" Margin="0,0,4,6" Click="AutoFit_Click" />
                             <Button Content="RESET" Margin="4,0,0,6" Click="ResetPlacement_Click" />
                         </UniformGrid>
 
-                        <TextBlock Text="Scale" FontWeight="SemiBold" Margin="0,8,0,3" />
+                        <TextBlock Text="Scale" FontWeight="SemiBold" Margin="0,7,0,2" />
                         <DockPanel><TextBlock x:Name="ScaleValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ScaleSlider" Minimum="30" Maximum="175" Value="100" TickFrequency="5" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
 
-                        <TextBlock Text="Horizontal" FontWeight="SemiBold" Margin="0,13,0,3" />
+                        <TextBlock Text="Horizontal" FontWeight="SemiBold" Margin="0,10,0,2" />
                         <DockPanel><TextBlock x:Name="XValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="XSlider" Minimum="-360" Maximum="360" Value="0" TickFrequency="10" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
 
-                        <TextBlock Text="Vertical" FontWeight="SemiBold" Margin="0,13,0,3" />
+                        <TextBlock Text="Vertical" FontWeight="SemiBold" Margin="0,10,0,2" />
                         <DockPanel><TextBlock x:Name="YValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="YSlider" Minimum="-280" Maximum="280" Value="90" TickFrequency="10" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
 
-                        <TextBlock Text="Rotation" FontWeight="SemiBold" Margin="0,13,0,3" />
+                        <TextBlock Text="Rotation" FontWeight="SemiBold" Margin="0,10,0,2" />
                         <DockPanel><TextBlock x:Name="RotationValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="RotationSlider" Minimum="-10" Maximum="10" Value="0" TickFrequency="1" ValueChanged="PlacementSlider_ValueChanged" /></DockPanel>
 
-                        <Button x:Name="CompareButton" Content="COMPARE ORIGINAL" Margin="0,16,0,7" Click="CompareButton_Click" />
-                        <Button Content="SAVE PROJECT" Margin="0,0,0,7" Click="SaveProject_Click" />
+                        <Separator Margin="0,12,0,10" />
+                        <DockPanel>
+                            <TextBlock Text="SMART SHADOW" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <CheckBox x:Name="ShadowEnabledCheckBox" DockPanel.Dock="Right" Content="ON" IsChecked="True" VerticalAlignment="Center" Checked="ShadowControl_Changed" Unchecked="ShadowControl_Changed" />
+                        </DockPanel>
+                        <UniformGrid Columns="2" Margin="0,8,0,3">
+                            <Button Content="AUTO SHADOW" Margin="0,0,4,6" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="AutoShadow_Click" />
+                            <Button Content="RESET SHADOW" Margin="4,0,0,6" Click="ResetShadow_Click" />
+                        </UniformGrid>
 
-                        <Border Background="{StaticResource PanelAltBrush}" CornerRadius="8" Padding="12" Margin="0,9,0,0">
-                            <StackPanel>
-                                <TextBlock Text="NEXT: REALISM" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock Text="Smart contact shadow" Margin="0,8,0,0" />
-                                <TextBlock Text="Angle • length • width • softness • opacity • tire contact" Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0" />
-                                <TextBlock Text="Lighting match" Margin="0,10,0,0" />
-                                <TextBlock Text="Blend car brightness and color temperature into the selected scene." Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0" />
-                            </StackPanel>
-                        </Border>
+                        <TextBlock Text="Opacity" FontWeight="SemiBold" Margin="0,6,0,2" />
+                        <DockPanel><TextBlock x:Name="ShadowOpacityValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowOpacitySlider" Minimum="0" Maximum="80" Value="34" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Softness" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="ShadowSoftnessValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowSoftnessSlider" Minimum="2" Maximum="45" Value="20" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Width" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="ShadowWidthValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowWidthSlider" Minimum="35" Maximum="135" Value="88" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Length" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="ShadowLengthValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowLengthSlider" Minimum="15" Maximum="100" Value="45" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Angle" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="ShadowAngleValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowAngleSlider" Minimum="-60" Maximum="60" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Horizontal offset" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="ShadowXValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowXSlider" Minimum="-180" Maximum="180" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Vertical offset" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="ShadowYValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ShadowYSlider" Minimum="-100" Maximum="140" Value="0" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <TextBlock Text="Tire contact" FontWeight="SemiBold" Margin="0,8,0,2" />
+                        <DockPanel><TextBlock x:Name="ContactShadowValueText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" /><Slider x:Name="ContactShadowSlider" Minimum="0" Maximum="100" Value="58" ValueChanged="ShadowSlider_ValueChanged" /></DockPanel>
+
+                        <Button x:Name="CompareButton" Content="COMPARE ORIGINAL" Margin="0,14,0,7" Click="CompareButton_Click" />
+                        <Button Content="SAVE PROJECT" Margin="0,0,0,7" Click="SaveProject_Click" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>
