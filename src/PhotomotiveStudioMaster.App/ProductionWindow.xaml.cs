@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using PhotomotiveStudioMaster.App.Models;
 using PhotomotiveStudioMaster.App.Services;
 
@@ -25,6 +26,7 @@ public partial class ProductionWindow : Window
         RefreshDrives();
         RefreshImportedJobs();
         RefreshAiStatus();
+        UpdateSelectedJobState();
     }
 
     private void RefreshDrives_Click(object sender, RoutedEventArgs e) => RefreshDrives();
@@ -34,13 +36,17 @@ public partial class ProductionWindow : Window
         var window = new AiRuntimeManagerWindow { Owner = this };
         window.ShowDialog();
         RefreshAiStatus();
+        UpdateSelectedJobState();
     }
+
+    private void ImportedGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        => UpdateSelectedJobState();
 
     private void OpenComposer_Click(object sender, RoutedEventArgs e)
     {
         if (ImportedGrid.SelectedItem is not ImportRecord selected)
         {
-            MessageBox.Show("Select an event job first.", "Live Composer", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Select an event job first.", "Automotive Photo Studio", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -48,14 +54,16 @@ public partial class ProductionWindow : Window
         {
             MessageBox.Show(
                 "This job does not have an extracted vehicle yet. Run Extract Selected first.",
-                "Live Composer",
+                "Automotive Photo Studio",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             return;
         }
 
+        var selectedId = selected.Id;
         var window = new ComposerWindow(_activeEvent, selected) { Owner = this };
         window.ShowDialog();
+        RefreshImportedJobs(selectedId);
     }
 
     private void RefreshDrives()
@@ -81,10 +89,9 @@ public partial class ProductionWindow : Window
         var status = _extractionService.GetRuntimeStatus();
         AiStatusText.Text = status.IsReady ? "● Local AI Ready" : "○ AI Setup Required";
         AiStatusText.ToolTip = status.Message;
-        ExtractButton.IsEnabled = status.IsReady;
         ExtractionDetailText.Text = status.IsReady
-            ? "Select an imported JPEG/PNG/TIFF job and extract the vehicle."
-            : "Click AI Runtime to install or repair the local extraction engine.";
+            ? "Select an imported job, then click Extract Selected."
+            : "Select a job and click Extract Selected; AI Runtime setup will open automatically.";
     }
 
     private void ScanCard_Click(object sender, RoutedEventArgs e)
@@ -181,12 +188,18 @@ public partial class ProductionWindow : Window
             RefreshAiStatus();
             runtime = _extractionService.GetRuntimeStatus();
             if (!runtime.IsReady)
+            {
+                UpdateSelectedJobState();
                 return;
+            }
         }
 
+        var selectedId = selected.Id;
         ExtractButton.IsEnabled = false;
+        PhotoStudioButton.IsEnabled = false;
         StatusText.Text = $"Extracting vehicle from {selected.JobNumber}...";
         DetailText.Text = "Local AI processing is running. The first extraction may take longer while the model initializes.";
+        PreviewStatusText.Text = "Extracting...";
         ImportProgressBar.IsIndeterminate = true;
 
         try
@@ -199,14 +212,14 @@ public partial class ProductionWindow : Window
                 StatusText.Text = $"Extraction failed for {selected.JobNumber}.";
                 DetailText.Text = result.ErrorMessage;
                 MessageBox.Show(result.ErrorMessage, "Vehicle Extraction Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                RefreshImportedJobs();
+                RefreshImportedJobs(selectedId);
                 return;
             }
 
-            RefreshImportedJobs();
+            RefreshImportedJobs(selectedId);
             StatusText.Text = $"Vehicle extraction complete: {selected.JobNumber}";
             DetailText.Text = $"Transparent PNG saved to {result.OutputPath}";
-            ExtractionDetailText.Text = "Extraction complete. Select the job and click Open Composer.";
+            ExtractionDetailText.Text = "Extraction complete. Review the preview, then click Photo Studio.";
         }
         catch (Exception ex)
         {
@@ -214,11 +227,63 @@ public partial class ProductionWindow : Window
             StatusText.Text = "Vehicle extraction stopped unexpectedly.";
             DetailText.Text = ex.Message;
             MessageBox.Show(ex.Message, "Vehicle Extraction Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            RefreshImportedJobs(selectedId);
         }
         finally
         {
             ImportProgressBar.IsIndeterminate = false;
-            ExtractButton.IsEnabled = _extractionService.GetRuntimeStatus().IsReady;
+            UpdateSelectedJobState();
+        }
+    }
+
+    private void UpdateSelectedJobState()
+    {
+        var selected = ImportedGrid.SelectedItem as ImportRecord;
+        if (selected is null)
+        {
+            ExtractButton.IsEnabled = false;
+            PhotoStudioButton.IsEnabled = false;
+            OriginalPreviewImage.Source = null;
+            ExtractedPreviewImage.Source = null;
+            PreviewStatusText.Text = string.Empty;
+            SelectedJobHintText.Text = "Select a job to begin.";
+            return;
+        }
+
+        OriginalPreviewImage.Source = LoadPreview(selected.StoredPath);
+        var hasExtraction = !string.IsNullOrWhiteSpace(selected.ExtractionPath) && File.Exists(selected.ExtractionPath);
+        ExtractedPreviewImage.Source = hasExtraction ? LoadPreview(selected.ExtractionPath) : null;
+        PreviewStatusText.Text = hasExtraction ? "Ready" : "Not extracted";
+
+        var isBusy = selected.Status.Equals("Extracting", StringComparison.OrdinalIgnoreCase);
+        ExtractButton.IsEnabled = !isBusy;
+        PhotoStudioButton.IsEnabled = hasExtraction && !isBusy;
+
+        SelectedJobHintText.Text = hasExtraction
+            ? $"{selected.JobNumber}: extracted and ready for Photo Studio."
+            : $"{selected.JobNumber}: click Extract Selected to remove the current background.";
+    }
+
+    private static BitmapImage? LoadPreview(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return null;
+
+        try
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.DecodePixelWidth = 720;
+            bitmap.StreamSource = stream;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -234,13 +299,18 @@ public partial class ProductionWindow : Window
         });
     }
 
-    private void RefreshImportedJobs()
+    private void RefreshImportedJobs(long? reselectId = null)
     {
+        var priorId = reselectId ?? (ImportedGrid.SelectedItem as ImportRecord)?.Id;
         _importedJobs.Clear();
         foreach (var record in _importService.GetImportedJobs(_activeEvent.Id))
             _importedJobs.Add(record);
 
         ImportedCountText.Text = $"{_importedJobs.Count} jobs";
+        if (priorId is not null)
+            ImportedGrid.SelectedItem = _importedJobs.FirstOrDefault(x => x.Id == priorId.Value);
+
+        UpdateSelectedJobState();
     }
 
     private static string SafeVolumeLabel(DriveInfo drive)
