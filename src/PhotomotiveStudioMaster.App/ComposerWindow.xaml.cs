@@ -48,7 +48,10 @@ public partial class ComposerWindow : Window
         LoadBackgrounds();
 
         if (!TryRestoreProject())
+        {
             AutoPosition();
+            AutoShadow(showStatus: false);
+        }
     }
 
     private void LoadVehicleAndOriginal()
@@ -109,7 +112,7 @@ public partial class ComposerWindow : Window
         _backgroundBitmap = LoadBitmap(background.FilePath);
         BackgroundPreviewImage.Source = _backgroundBitmap;
         SelectedBackgroundText.Text = background.Name;
-        ComposerStatusText.Text = "Background selected. Fine-tune the vehicle or save the finished photo.";
+        ComposerStatusText.Text = "Background selected. Fine-tune the vehicle and shadow or save the finished photo.";
         ComposerDetailText.Text = $"{background.Category}  •  {background.Name}  •  {background.ResolutionDisplay}";
 
         if (!_restoringProject)
@@ -120,6 +123,18 @@ public partial class ComposerWindow : Window
     {
         if (_initialized)
             UpdatePlacementPreview();
+    }
+
+    private void ShadowSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_initialized)
+            UpdateShadowPreview();
+    }
+
+    private void ShadowControl_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_initialized)
+            UpdateShadowPreview();
     }
 
     private void AutoPosition_Click(object sender, RoutedEventArgs e) => AutoPosition();
@@ -180,14 +195,137 @@ public partial class ComposerWindow : Window
         if (_vehicleBitmap is null)
             return;
 
-        var width = BaseVehicleWidth * ScaleSlider.Value / 100.0;
-        var height = width * _vehicleBitmap.PixelHeight / _vehicleBitmap.PixelWidth;
-
-        CarPreviewImage.Width = width;
-        CarPreviewImage.Height = height;
-        Canvas.SetLeft(CarPreviewImage, (PreviewWidth - width) / 2.0 + XSlider.Value);
-        Canvas.SetTop(CarPreviewImage, (PreviewHeight - height) / 2.0 + YSlider.Value);
+        var rect = GetVehicleRect(1.0);
+        CarPreviewImage.Width = rect.Width;
+        CarPreviewImage.Height = rect.Height;
+        Canvas.SetLeft(CarPreviewImage, rect.Left);
+        Canvas.SetTop(CarPreviewImage, rect.Top);
         CarPreviewImage.RenderTransform = new RotateTransform(RotationSlider.Value);
+        UpdateShadowPreview();
+    }
+
+    private Rect GetVehicleRect(double scaleFactor)
+    {
+        if (_vehicleBitmap is null)
+            return Rect.Empty;
+
+        var canvasWidth = PreviewWidth * scaleFactor;
+        var canvasHeight = PreviewHeight * scaleFactor;
+        var width = BaseVehicleWidth * scaleFactor * ScaleSlider.Value / 100.0;
+        var height = width * _vehicleBitmap.PixelHeight / _vehicleBitmap.PixelWidth;
+        var left = (canvasWidth - width) / 2.0 + XSlider.Value * scaleFactor;
+        var top = (canvasHeight - height) / 2.0 + YSlider.Value * scaleFactor;
+        return new Rect(left, top, width, height);
+    }
+
+    private void AutoShadow_Click(object sender, RoutedEventArgs e) => AutoShadow(showStatus: true);
+
+    private void AutoShadow(bool showStatus)
+    {
+        ShadowEnabledCheckBox.IsChecked = true;
+        ShadowOpacitySlider.Value = 34;
+        ShadowSoftnessSlider.Value = 20;
+        ShadowWidthSlider.Value = 88;
+
+        if (_vehicleBitmap is not null)
+        {
+            var aspect = _vehicleBitmap.PixelWidth / (double)Math.Max(1, _vehicleBitmap.PixelHeight);
+            ShadowLengthSlider.Value = aspect >= 2.2 ? 38 : aspect >= 1.7 ? 44 : 50;
+        }
+        else
+        {
+            ShadowLengthSlider.Value = 44;
+        }
+
+        ShadowAngleSlider.Value = 0;
+        ShadowXSlider.Value = 0;
+        ShadowYSlider.Value = 0;
+        ContactShadowSlider.Value = 62;
+        UpdateShadowPreview();
+
+        if (showStatus)
+        {
+            ComposerStatusText.Text = "Auto Shadow created from the vehicle footprint.";
+            ComposerDetailText.Text = "Adjust width, length, angle, softness, opacity, offsets, and tire contact as needed.";
+        }
+    }
+
+    private void ResetShadow_Click(object sender, RoutedEventArgs e)
+    {
+        ShadowEnabledCheckBox.IsChecked = true;
+        ShadowOpacitySlider.Value = 32;
+        ShadowSoftnessSlider.Value = 20;
+        ShadowWidthSlider.Value = 85;
+        ShadowLengthSlider.Value = 42;
+        ShadowAngleSlider.Value = 0;
+        ShadowXSlider.Value = 0;
+        ShadowYSlider.Value = 0;
+        ContactShadowSlider.Value = 55;
+        UpdateShadowPreview();
+        ComposerStatusText.Text = "Shadow controls reset.";
+    }
+
+    private void UpdateShadowPreview()
+    {
+        ShadowOpacityValueText.Text = $"{ShadowOpacitySlider.Value:0}%";
+        ShadowSoftnessValueText.Text = $"{ShadowSoftnessSlider.Value:0}";
+        ShadowWidthValueText.Text = $"{ShadowWidthSlider.Value:0}%";
+        ShadowLengthValueText.Text = $"{ShadowLengthSlider.Value:0}%";
+        ShadowAngleValueText.Text = $"{ShadowAngleSlider.Value:+0;-0;0}°";
+        ShadowXValueText.Text = $"{ShadowXSlider.Value:+0;-0;0}";
+        ShadowYValueText.Text = $"{ShadowYSlider.Value:+0;-0;0}";
+        ContactShadowValueText.Text = $"{ContactShadowSlider.Value:0}%";
+
+        var enabled = ShadowEnabledCheckBox.IsChecked == true && _vehicleBitmap is not null;
+        ShadowCanvas.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+        if (!enabled)
+            return;
+
+        var vehicle = GetVehicleRect(1.0);
+        if (vehicle.IsEmpty)
+            return;
+
+        var geometry = GetShadowGeometry(vehicle, 1.0);
+        GroundShadowEllipse.Width = geometry.Ground.Width;
+        GroundShadowEllipse.Height = geometry.Ground.Height;
+        GroundShadowEllipse.Opacity = ShadowOpacitySlider.Value / 100.0;
+        GroundShadowBlur.Radius = ShadowSoftnessSlider.Value;
+        GroundShadowEllipse.RenderTransform = new RotateTransform(ShadowAngleSlider.Value);
+        Canvas.SetLeft(GroundShadowEllipse, geometry.Ground.Left);
+        Canvas.SetTop(GroundShadowEllipse, geometry.Ground.Top);
+
+        var contactOpacity = ContactShadowSlider.Value / 100.0 * 0.78;
+        LeftContactShadow.Width = geometry.LeftContact.Width;
+        LeftContactShadow.Height = geometry.LeftContact.Height;
+        LeftContactShadow.Opacity = contactOpacity;
+        Canvas.SetLeft(LeftContactShadow, geometry.LeftContact.Left);
+        Canvas.SetTop(LeftContactShadow, geometry.LeftContact.Top);
+
+        RightContactShadow.Width = geometry.RightContact.Width;
+        RightContactShadow.Height = geometry.RightContact.Height;
+        RightContactShadow.Opacity = contactOpacity;
+        Canvas.SetLeft(RightContactShadow, geometry.RightContact.Left);
+        Canvas.SetTop(RightContactShadow, geometry.RightContact.Top);
+    }
+
+    private ShadowGeometry GetShadowGeometry(Rect vehicle, double scaleFactor)
+    {
+        var shadowWidth = vehicle.Width * ShadowWidthSlider.Value / 100.0;
+        var shadowHeight = vehicle.Height * (0.10 + ShadowLengthSlider.Value / 100.0 * 0.30);
+        var centerX = vehicle.Left + vehicle.Width / 2.0 + ShadowXSlider.Value * scaleFactor;
+        var centerY = vehicle.Top + vehicle.Height * 0.90 + ShadowYSlider.Value * scaleFactor;
+        var ground = new Rect(centerX - shadowWidth / 2.0, centerY - shadowHeight / 2.0, shadowWidth, shadowHeight);
+
+        var contactWidth = Math.Max(14 * scaleFactor, vehicle.Width * 0.16);
+        var contactHeight = Math.Max(5 * scaleFactor, vehicle.Height * 0.035);
+        var contactY = vehicle.Top + vehicle.Height * 0.955 + ShadowYSlider.Value * scaleFactor - contactHeight / 2.0;
+        var leftCenter = vehicle.Left + vehicle.Width * 0.24 + ShadowXSlider.Value * scaleFactor;
+        var rightCenter = vehicle.Left + vehicle.Width * 0.76 + ShadowXSlider.Value * scaleFactor;
+
+        return new ShadowGeometry(
+            ground,
+            new Rect(leftCenter - contactWidth / 2.0, contactY, contactWidth, contactHeight),
+            new Rect(rightCenter - contactWidth / 2.0, contactY, contactWidth, contactHeight));
     }
 
     private void CarPreviewImage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -282,6 +420,15 @@ public partial class ComposerWindow : Window
             X = XSlider.Value,
             Y = YSlider.Value,
             Rotation = RotationSlider.Value,
+            ShadowEnabled = ShadowEnabledCheckBox.IsChecked == true,
+            ShadowOpacity = ShadowOpacitySlider.Value,
+            ShadowSoftness = ShadowSoftnessSlider.Value,
+            ShadowWidth = ShadowWidthSlider.Value,
+            ShadowLength = ShadowLengthSlider.Value,
+            ShadowAngle = ShadowAngleSlider.Value,
+            ShadowX = ShadowXSlider.Value,
+            ShadowY = ShadowYSlider.Value,
+            ContactShadow = ContactShadowSlider.Value,
             SavedAt = DateTime.Now
         };
 
@@ -296,7 +443,7 @@ public partial class ComposerWindow : Window
         if (showConfirmation)
         {
             MessageBox.Show(
-                "Photo Studio project saved. Your background and vehicle placement will be restored the next time you open this job.",
+                "Photo Studio project saved. Your background, vehicle placement, and shadow settings will be restored the next time you open this job.",
                 "Project Saved",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -328,7 +475,19 @@ public partial class ComposerWindow : Window
             XSlider.Value = Math.Clamp(state.X, XSlider.Minimum, XSlider.Maximum);
             YSlider.Value = Math.Clamp(state.Y, YSlider.Minimum, YSlider.Maximum);
             RotationSlider.Value = Math.Clamp(state.Rotation, RotationSlider.Minimum, RotationSlider.Maximum);
+
+            ShadowEnabledCheckBox.IsChecked = state.ShadowEnabled;
+            ShadowOpacitySlider.Value = Math.Clamp(state.ShadowOpacity, ShadowOpacitySlider.Minimum, ShadowOpacitySlider.Maximum);
+            ShadowSoftnessSlider.Value = Math.Clamp(state.ShadowSoftness, ShadowSoftnessSlider.Minimum, ShadowSoftnessSlider.Maximum);
+            ShadowWidthSlider.Value = Math.Clamp(state.ShadowWidth, ShadowWidthSlider.Minimum, ShadowWidthSlider.Maximum);
+            ShadowLengthSlider.Value = Math.Clamp(state.ShadowLength, ShadowLengthSlider.Minimum, ShadowLengthSlider.Maximum);
+            ShadowAngleSlider.Value = Math.Clamp(state.ShadowAngle, ShadowAngleSlider.Minimum, ShadowAngleSlider.Maximum);
+            ShadowXSlider.Value = Math.Clamp(state.ShadowX, ShadowXSlider.Minimum, ShadowXSlider.Maximum);
+            ShadowYSlider.Value = Math.Clamp(state.ShadowY, ShadowYSlider.Minimum, ShadowYSlider.Maximum);
+            ContactShadowSlider.Value = Math.Clamp(state.ContactShadow, ContactShadowSlider.Minimum, ContactShadowSlider.Maximum);
+
             UpdatePlacementPreview();
+            UpdateShadowPreview();
 
             ComposerStatusText.Text = "Saved Photo Studio project restored.";
             ComposerDetailText.Text = state.SavedAt == default
@@ -417,21 +576,69 @@ public partial class ComposerWindow : Window
             };
             dc.DrawRectangle(backgroundBrush, null, new Rect(0, 0, OutputWidth, OutputHeight));
 
-            var vehicleWidth = BaseVehicleWidth * previewToOutput * ScaleSlider.Value / 100.0;
-            var vehicleHeight = vehicleWidth * _vehicleBitmap!.PixelHeight / _vehicleBitmap.PixelWidth;
-            var left = (OutputWidth - vehicleWidth) / 2.0 + XSlider.Value * previewToOutput;
-            var top = (OutputHeight - vehicleHeight) / 2.0 + YSlider.Value * previewToOutput;
-            var centerX = left + vehicleWidth / 2.0;
-            var centerY = top + vehicleHeight / 2.0;
+            var vehicle = GetVehicleRect(previewToOutput);
+            if (ShadowEnabledCheckBox.IsChecked == true)
+                DrawExportShadow(dc, vehicle, previewToOutput);
 
+            var centerX = vehicle.Left + vehicle.Width / 2.0;
+            var centerY = vehicle.Top + vehicle.Height / 2.0;
             dc.PushTransform(new RotateTransform(RotationSlider.Value, centerX, centerY));
-            dc.DrawImage(_vehicleBitmap, new Rect(left, top, vehicleWidth, vehicleHeight));
+            dc.DrawImage(_vehicleBitmap, vehicle);
             dc.Pop();
         }
 
         var render = new RenderTargetBitmap(OutputWidth, OutputHeight, 300, 300, PixelFormats.Pbgra32);
         render.Render(drawingVisual);
         return render;
+    }
+
+    private void DrawExportShadow(DrawingContext dc, Rect vehicle, double scaleFactor)
+    {
+        var geometry = GetShadowGeometry(vehicle, scaleFactor);
+        var opacity = Math.Clamp(ShadowOpacitySlider.Value / 100.0, 0, 0.9);
+        var softness = Math.Clamp(ShadowSoftnessSlider.Value / 45.0, 0.05, 1.0);
+
+        var groundBrush = CreateSoftShadowBrush(opacity, softness);
+        var groundCenter = new Point(geometry.Ground.Left + geometry.Ground.Width / 2.0, geometry.Ground.Top + geometry.Ground.Height / 2.0);
+        dc.PushTransform(new RotateTransform(ShadowAngleSlider.Value, groundCenter.X, groundCenter.Y));
+        dc.DrawEllipse(groundBrush, null, groundCenter, geometry.Ground.Width / 2.0, geometry.Ground.Height / 2.0);
+        dc.Pop();
+
+        var contactOpacity = Math.Clamp(ContactShadowSlider.Value / 100.0 * 0.78, 0, 0.82);
+        if (contactOpacity <= 0)
+            return;
+
+        var contactBrush = CreateSoftShadowBrush(contactOpacity, 0.32);
+        DrawEllipseRect(dc, geometry.LeftContact, contactBrush);
+        DrawEllipseRect(dc, geometry.RightContact, contactBrush);
+    }
+
+    private static void DrawEllipseRect(DrawingContext dc, Rect rect, Brush brush)
+    {
+        var center = new Point(rect.Left + rect.Width / 2.0, rect.Top + rect.Height / 2.0);
+        dc.DrawEllipse(brush, null, center, rect.Width / 2.0, rect.Height / 2.0);
+    }
+
+    private static RadialGradientBrush CreateSoftShadowBrush(double opacity, double softness)
+    {
+        var alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
+        var middleAlpha = (byte)Math.Clamp((int)Math.Round(alpha * 0.72), 0, 255);
+        var softStart = Math.Clamp(0.38 + softness * 0.22, 0.38, 0.60);
+        var softMiddle = Math.Clamp(0.72 + softness * 0.12, 0.72, 0.84);
+
+        var brush = new RadialGradientBrush
+        {
+            Center = new Point(0.5, 0.5),
+            GradientOrigin = new Point(0.5, 0.5),
+            RadiusX = 0.5,
+            RadiusY = 0.5
+        };
+        brush.GradientStops.Add(new GradientStop(Color.FromArgb(alpha, 0, 0, 0), 0));
+        brush.GradientStops.Add(new GradientStop(Color.FromArgb(alpha, 0, 0, 0), softStart));
+        brush.GradientStops.Add(new GradientStop(Color.FromArgb(middleAlpha, 0, 0, 0), softMiddle));
+        brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), 1));
+        brush.Freeze();
+        return brush;
     }
 
     private void OpenFinishedFolder_Click(object sender, RoutedEventArgs e)
@@ -528,6 +735,8 @@ public partial class ComposerWindow : Window
         }
     }
 
+    private readonly record struct ShadowGeometry(Rect Ground, Rect LeftContact, Rect RightContact);
+
     private sealed class PhotoStudioProjectState
     {
         public long JobId { get; set; }
@@ -538,6 +747,15 @@ public partial class ComposerWindow : Window
         public double X { get; set; }
         public double Y { get; set; } = 90;
         public double Rotation { get; set; }
+        public bool ShadowEnabled { get; set; } = true;
+        public double ShadowOpacity { get; set; } = 34;
+        public double ShadowSoftness { get; set; } = 20;
+        public double ShadowWidth { get; set; } = 88;
+        public double ShadowLength { get; set; } = 44;
+        public double ShadowAngle { get; set; }
+        public double ShadowX { get; set; }
+        public double ShadowY { get; set; }
+        public double ContactShadow { get; set; } = 62;
         public DateTime SavedAt { get; set; }
     }
 }
