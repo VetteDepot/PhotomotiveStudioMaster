@@ -42,8 +42,8 @@
                 <Border Grid.Row="3" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="14" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="SYSTEM" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <TextBlock Text="● Live Composer Checkpoint" Foreground="{StaticResource SuccessBrush}" Margin="0,7,0,0" FontWeight="SemiBold" />
-                        <TextBlock Text="Version 0.6" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
+                        <TextBlock Text="● Automotive Photo Studio" Foreground="{StaticResource SuccessBrush}" Margin="0,7,0,0" FontWeight="SemiBold" />
+                        <TextBlock Text="Version 0.7" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -77,8 +77,8 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="330" /></Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Center" MaxWidth="650">
-                        <TextBlock Text="Live Background Composer" FontSize="29" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text="Module 2.2 combines an extracted vehicle with any managed background in a live 8×10 landscape preview. Adjust vehicle scale, horizontal and vertical placement, and rotation, then save a print-ready 3000×2400 PNG to the event's 05_Composites folder."
+                        <TextBlock Text="Automotive Photo Studio" FontSize="29" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Turn an ordinary car-show photograph into a polished automotive image. Extract the car, choose a realistic background, position it naturally, compare against the original, and save an 8×10 finished photo as JPG, PNG, or TIFF."
                                    TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,14,0,26" LineHeight="24" />
                         <StackPanel Orientation="Horizontal">
                             <Button Content="OPEN PRODUCTION" Width="190" Background="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentBrush}" Click="Production_Click" />
@@ -87,14 +87,15 @@
                     </StackPanel>
                     <Border Grid.Column="1" Background="{StaticResource PanelAltBrush}" CornerRadius="12" Padding="22" Margin="30,0,0,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="MODULE 2 • MILESTONE 2.2" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="✓  Background thumbnail browser" Margin="0,18,0,0" FontSize="14" />
-                            <TextBlock Text="✓  Extracted vehicle layer" Margin="0,11,0,0" FontSize="14" />
-                            <TextBlock Text="✓  Live scale + X/Y controls" Margin="0,11,0,0" FontSize="14" />
-                            <TextBlock Text="✓  Live rotation control" Margin="0,11,0,0" FontSize="14" />
-                            <TextBlock Text="✓  3000×2400 PNG export" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="MODULE 3 • PHOTO STUDIO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="✓  Managed background browser" Margin="0,18,0,0" FontSize="14" />
+                            <TextBlock Text="✓  Direct drag placement" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="✓  Mouse-wheel vehicle scaling" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="✓  Auto Fit + Auto Position" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="✓  Original / finished comparison" Margin="0,11,0,0" FontSize="14" />
+                            <TextBlock Text="✓  JPG / PNG / TIFF export" Margin="0,11,0,0" FontSize="14" />
                             <Border Background="{StaticResource InputBrush}" CornerRadius="8" Padding="12" Margin="0,22,0,0">
-                                <TextBlock Text="Next: interactive shadow engine + drag placement" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Next: realistic contact shadow engine" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
                             </Border>
                         </StackPanel>
                     </Border>
