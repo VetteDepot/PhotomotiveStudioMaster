@@ -171,7 +171,11 @@
                             <TextBlock Text="Name" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,5" />
                             <TextBox x:Name="NameBox" />
                             <TextBlock Text="Category" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,11,0,5" />
-                            <TextBox x:Name="CategoryBox" />
+                            <ComboBox x:Name="CategoryBox"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      StaysOpenOnEdit="True"
+                                      ToolTip="Choose a category or type a new one" />
                             <TextBlock Text="Tags" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,11,0,5" />
                             <TextBox x:Name="TagsBox" ToolTip="Example: garage, night, blue, Corvette" />
 
