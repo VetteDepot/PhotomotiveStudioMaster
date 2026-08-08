@@ -202,6 +202,7 @@ public partial class ComposerWindow : Window
         Canvas.SetTop(CarPreviewImage, rect.Top);
         CarPreviewImage.RenderTransform = new RotateTransform(RotationSlider.Value);
         UpdateShadowPreview();
+        UpdateReflectionPreview();
     }
 
     private Rect GetVehicleRect(double scaleFactor)
@@ -397,6 +398,7 @@ public partial class ComposerWindow : Window
         OriginalPreviewImage.Visibility = _showingOriginal ? Visibility.Visible : Visibility.Collapsed;
         CompareBadge.Visibility = _showingOriginal ? Visibility.Visible : Visibility.Collapsed;
         CompareButton.Content = _showingOriginal ? "SHOW FINISHED" : "COMPARE ORIGINAL";
+        UpdateReflectionPreview();
         ComposerStatusText.Text = _showingOriginal ? "Viewing the original car-show photo." : "Viewing the finished photo preview.";
     }
 
@@ -404,7 +406,11 @@ public partial class ComposerWindow : Window
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        try { SaveProject(showConfirmation: false); }
+        try
+        {
+            SaveProject(showConfirmation: false);
+            SaveReflectionState();
+        }
         catch { }
     }
 
@@ -436,6 +442,7 @@ public partial class ComposerWindow : Window
         var path = Path.Combine(folder, _job.JobNumber + ".json");
         var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(path, json);
+        SaveReflectionState();
 
         ComposerStatusText.Text = "Project saved.";
         ComposerDetailText.Text = path;
@@ -443,7 +450,7 @@ public partial class ComposerWindow : Window
         if (showConfirmation)
         {
             MessageBox.Show(
-                "Photo Studio project saved. Your background, vehicle placement, and shadow settings will be restored the next time you open this job.",
+                "Photo Studio project saved. Your background, vehicle placement, shadow, reflection, halo and realism settings will be restored the next time you open this job.",
                 "Project Saved",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -577,6 +584,8 @@ public partial class ComposerWindow : Window
             dc.DrawRectangle(backgroundBrush, null, new Rect(0, 0, OutputWidth, OutputHeight));
 
             var vehicle = GetVehicleRect(previewToOutput);
+            DrawExportReflection(dc, vehicle, previewToOutput);
+
             if (ShadowEnabledCheckBox.IsChecked == true)
                 DrawExportShadow(dc, vehicle, previewToOutput);
 
