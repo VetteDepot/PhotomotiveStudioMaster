@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 using PhotomotiveStudioMaster.App.Models;
 using PhotomotiveStudioMaster.App.Services;
 
@@ -43,6 +44,96 @@ public partial class ProductionWindow : Window
     private void ImportedGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         => UpdateSelectedJobState();
 
+    private async void AddLocalPhotos_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Add Photos to Active Event",
+            Multiselect = true,
+            CheckFileExists = true,
+            Filter = "Supported photos (*.jpg;*.jpeg;*.png;*.tif;*.tiff)|*.jpg;*.jpeg;*.png;*.tif;*.tiff|JPEG photos (*.jpg;*.jpeg)|*.jpg;*.jpeg|PNG images (*.png)|*.png|TIFF images (*.tif;*.tiff)|*.tif;*.tiff|All files (*.*)|*.*"
+        };
+
+        if (dialog.ShowDialog(this) != true || dialog.FileNames.Length == 0)
+            return;
+
+        _candidates.Clear();
+        foreach (var path in dialog.FileNames)
+        {
+            try
+            {
+                var info = new FileInfo(path);
+                _candidates.Add(new ImportCandidate
+                {
+                    SourcePath = path,
+                    SizeBytes = info.Length
+                });
+            }
+            catch
+            {
+                // Unavailable files are ignored; the import result reports any later failures.
+            }
+        }
+
+        CandidateCountText.Text = $"{_candidates.Count} local file{(_candidates.Count == 1 ? string.Empty : "s")}";
+        ScanSummaryText.Text = _candidates.Count == 0
+            ? "No usable local photos selected"
+            : $"{_candidates.Count} local photo{(_candidates.Count == 1 ? string.Empty : "s")} selected";
+
+        if (_candidates.Count == 0)
+            return;
+
+        AddLocalPhotosButton.IsEnabled = false;
+        ImportButton.IsEnabled = false;
+        ImportProgressBar.IsIndeterminate = false;
+        ImportProgressBar.Value = 0;
+        SetProgressState("Importing local photos…", "AccentBrush");
+        StatusText.Text = "Adding local photos to the active event...";
+        DetailText.Text = "Files are being copied and checksum verified before entering the Production Queue.";
+
+        var progress = new Progress<ImportProgress>(p =>
+        {
+            ImportProgressBar.Value = p.Total == 0 ? 0 : p.Current * 100.0 / p.Total;
+            StatusText.Text = $"{p.Status}: {p.FileName}";
+            DetailText.Text = $"Local photo {p.Current} of {p.Total}";
+            ExtractionProgressText.Text = $"Importing {p.Current} of {p.Total}";
+        });
+
+        try
+        {
+            var result = await _importService.ImportAsync(_activeEvent, _candidates.ToList(), progress);
+            RefreshImportedJobs();
+            ImportProgressBar.Value = 100;
+            StatusText.Text = $"Local import complete: {result.Imported} imported, {result.Duplicates} duplicates skipped, {result.Errors} errors.";
+            DetailText.Text = result.Imported > 0
+                ? "The new jobs are ready in the Production Queue. Select one and click Extract Selected."
+                : "No new jobs were added.";
+            SetProgressState(result.Errors == 0 ? "✓ Local import complete" : "Local import completed with errors",
+                result.Errors == 0 ? "SuccessBrush" : "WarningBrush");
+
+            if (result.Errors > 0)
+            {
+                MessageBox.Show(
+                    string.Join(Environment.NewLine, result.ErrorMessages.Take(10)),
+                    "Local Import Completed with Errors",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Local photo import failed.";
+            DetailText.Text = ex.Message;
+            SetProgressState("Local import failed", "ErrorBrush");
+            MessageBox.Show(ex.Message, "Local Photo Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            AddLocalPhotosButton.IsEnabled = true;
+            ImportButton.IsEnabled = false;
+        }
+    }
+
     private void OpenComposer_Click(object sender, RoutedEventArgs e)
     {
         if (ImportedGrid.SelectedItem is not ImportRecord selected)
@@ -81,7 +172,7 @@ public partial class ProductionWindow : Window
         }
         else
         {
-            StatusText.Text = "No removable drives detected. Insert the SD card and click Refresh Drives.";
+            StatusText.Text = "No removable drives detected. Scan an SD card or use Add Local Photos.";
         }
     }
 
@@ -134,6 +225,7 @@ public partial class ProductionWindow : Window
             return;
 
         ImportButton.IsEnabled = false;
+        AddLocalPhotosButton.IsEnabled = false;
         DriveCombo.IsEnabled = false;
         ImportProgressBar.IsIndeterminate = false;
         ImportProgressBar.Value = 0;
@@ -174,6 +266,7 @@ public partial class ProductionWindow : Window
         finally
         {
             ImportButton.IsEnabled = _candidates.Count > 0;
+            AddLocalPhotosButton.IsEnabled = true;
             DriveCombo.IsEnabled = true;
         }
     }
@@ -203,6 +296,7 @@ public partial class ProductionWindow : Window
         var selectedId = selected.Id;
         ExtractButton.IsEnabled = false;
         PhotoStudioButton.IsEnabled = false;
+        AddLocalPhotosButton.IsEnabled = false;
         StatusText.Text = $"Extracting vehicle from {selected.JobNumber}...";
         DetailText.Text = "Local AI processing is running. The first extraction may take longer while the model initializes.";
         PreviewStatusText.Text = "Extracting…";
@@ -245,6 +339,7 @@ public partial class ProductionWindow : Window
         finally
         {
             ImportProgressBar.IsIndeterminate = false;
+            AddLocalPhotosButton.IsEnabled = true;
             UpdateSelectedJobState();
         }
     }
