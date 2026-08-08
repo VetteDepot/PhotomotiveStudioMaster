@@ -6,7 +6,8 @@
         Height="860"
         MinWidth="1100"
         MinHeight="720"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        KeyDown="ProductionWindow_KeyDown">
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -83,10 +84,17 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,12">
-                        <TextBlock Text="EVENT PROCESSING QUEUE" FontWeight="Bold" FontSize="12" />
-                        <TextBlock x:Name="ImportedCountText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button x:Name="DeleteSelectedButton" Content="DELETE SELECTED" Width="135" Margin="0,0,8,0" IsEnabled="False" Click="DeleteSelected_Click" />
+                            <Button x:Name="ClearEventButton" Content="CLEAR EVENT" Width="115" Background="{StaticResource ErrorBrush}" BorderBrush="{StaticResource ErrorBrush}" Click="ClearEvent_Click" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="EVENT PROCESSING QUEUE" FontWeight="Bold" FontSize="12" />
+                            <TextBlock Text="Ctrl/Shift selects multiple jobs • Delete removes selected • Ctrl+Delete clears the event" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                        <TextBlock x:Name="ImportedCountText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,14,0" VerticalAlignment="Center" />
                     </DockPanel>
-                    <DataGrid x:Name="ImportedGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" SelectionMode="Single" SelectionChanged="ImportedGrid_SelectionChanged">
+                    <DataGrid x:Name="ImportedGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="ImportedGrid_SelectionChanged">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Job" Binding="{Binding JobNumber}" Width="105" />
                             <DataGridTextColumn Header="Original" Binding="{Binding OriginalFileName}" Width="*" />
