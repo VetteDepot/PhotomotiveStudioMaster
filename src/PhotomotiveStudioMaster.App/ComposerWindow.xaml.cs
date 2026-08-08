@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -24,9 +26,11 @@ public partial class ComposerWindow : Window
     private BackgroundRecord? _selectedBackground;
     private BitmapSource? _vehicleBitmap;
     private BitmapSource? _originalBitmap;
+    private BitmapSource? _backgroundBitmap;
     private bool _initialized;
     private bool _showingOriginal;
     private bool _dragging;
+    private bool _restoringProject;
     private Point _dragStart;
     private double _dragStartX;
     private double _dragStartY;
@@ -40,9 +44,11 @@ public partial class ComposerWindow : Window
         JobText.Text = $"{job.JobNumber}  •  {job.OriginalFileName}";
         LoadVehicleAndOriginal();
         LoadCategories();
-        LoadBackgrounds();
         _initialized = true;
-        AutoPosition();
+        LoadBackgrounds();
+
+        if (!TryRestoreProject())
+            AutoPosition();
     }
 
     private void LoadVehicleAndOriginal()
@@ -60,7 +66,8 @@ public partial class ComposerWindow : Window
             return;
         }
 
-        _vehicleBitmap = LoadBitmap(_job.ExtractionPath);
+        var extracted = LoadBitmap(_job.ExtractionPath);
+        _vehicleBitmap = CropToVisibleAlpha(extracted);
         CarPreviewImage.Source = _vehicleBitmap;
     }
 
@@ -75,6 +82,7 @@ public partial class ComposerWindow : Window
         var category = CategoryFilter.SelectedItem?.ToString() ?? "All";
         var visible = _backgroundService.Filter(BackgroundSearchBox.Text, category);
         BackgroundList.ItemsSource = visible;
+        BackgroundCountText.Text = $"{visible.Count} shown";
 
         if (visible.Count > 0 && BackgroundList.SelectedItem is null)
             BackgroundList.SelectedIndex = 0;
@@ -98,11 +106,14 @@ public partial class ComposerWindow : Window
             return;
 
         _selectedBackground = background;
-        BackgroundPreviewImage.Source = LoadBitmap(background.FilePath);
+        _backgroundBitmap = LoadBitmap(background.FilePath);
+        BackgroundPreviewImage.Source = _backgroundBitmap;
         SelectedBackgroundText.Text = background.Name;
-        ComposerStatusText.Text = "Background selected. Position the vehicle, compare with the original, then save the finished photo.";
-        ComposerDetailText.Text = $"{background.Category}  •  {background.Name}";
-        _backgroundService.MarkUsed(background);
+        ComposerStatusText.Text = "Background selected. Fine-tune the vehicle or save the finished photo.";
+        ComposerDetailText.Text = $"{background.Category}  •  {background.Name}  •  {background.ResolutionDisplay}";
+
+        if (!_restoringProject)
+            _backgroundService.MarkUsed(background);
     }
 
     private void PlacementSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -117,6 +128,7 @@ public partial class ComposerWindow : Window
     {
         AutoFitVehicle();
         UpdatePlacementPreview();
+        ComposerStatusText.Text = "Vehicle fitted to the scene. Drag it to fine-tune placement.";
     }
 
     private void AutoPosition()
@@ -228,6 +240,11 @@ public partial class ComposerWindow : Window
             ToggleCompare();
             e.Handled = true;
         }
+        else if (e.Key == Key.S && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            SaveProject(showConfirmation: true);
+            e.Handled = true;
+        }
     }
 
     private void ToggleCompare()
@@ -242,7 +259,91 @@ public partial class ComposerWindow : Window
         OriginalPreviewImage.Visibility = _showingOriginal ? Visibility.Visible : Visibility.Collapsed;
         CompareBadge.Visibility = _showingOriginal ? Visibility.Visible : Visibility.Collapsed;
         CompareButton.Content = _showingOriginal ? "SHOW FINISHED" : "COMPARE ORIGINAL";
-        ComposerStatusText.Text = _showingOriginal ? "Viewing the original car-show photo." : "Viewing the finished composite preview.";
+        ComposerStatusText.Text = _showingOriginal ? "Viewing the original car-show photo." : "Viewing the finished photo preview.";
+    }
+
+    private void SaveProject_Click(object sender, RoutedEventArgs e) => SaveProject(showConfirmation: true);
+
+    private void Window_Closing(object? sender, CancelEventArgs e)
+    {
+        try { SaveProject(showConfirmation: false); }
+        catch { }
+    }
+
+    private void SaveProject(bool showConfirmation)
+    {
+        var state = new PhotoStudioProjectState
+        {
+            JobId = _job.Id,
+            JobNumber = _job.JobNumber,
+            BackgroundId = _selectedBackground?.Id ?? 0,
+            BackgroundName = _selectedBackground?.Name ?? string.Empty,
+            Scale = ScaleSlider.Value,
+            X = XSlider.Value,
+            Y = YSlider.Value,
+            Rotation = RotationSlider.Value,
+            SavedAt = DateTime.Now
+        };
+
+        var folder = GetProjectFolder();
+        var path = Path.Combine(folder, _job.JobNumber + ".json");
+        var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(path, json);
+
+        ComposerStatusText.Text = "Project saved.";
+        ComposerDetailText.Text = path;
+
+        if (showConfirmation)
+        {
+            MessageBox.Show(
+                "Photo Studio project saved. Your background and vehicle placement will be restored the next time you open this job.",
+                "Project Saved",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+    }
+
+    private bool TryRestoreProject()
+    {
+        var path = Path.Combine(GetProjectFolder(), _job.JobNumber + ".json");
+        if (!File.Exists(path))
+            return false;
+
+        try
+        {
+            var state = JsonSerializer.Deserialize<PhotoStudioProjectState>(File.ReadAllText(path));
+            if (state is null)
+                return false;
+
+            _restoringProject = true;
+            CategoryFilter.SelectedItem = "All";
+            LoadBackgrounds();
+
+            var backgrounds = BackgroundList.ItemsSource?.Cast<BackgroundRecord>().ToList() ?? new List<BackgroundRecord>();
+            var savedBackground = backgrounds.FirstOrDefault(x => x.Id == state.BackgroundId);
+            if (savedBackground is not null)
+                BackgroundList.SelectedItem = savedBackground;
+
+            ScaleSlider.Value = Math.Clamp(state.Scale, ScaleSlider.Minimum, ScaleSlider.Maximum);
+            XSlider.Value = Math.Clamp(state.X, XSlider.Minimum, XSlider.Maximum);
+            YSlider.Value = Math.Clamp(state.Y, YSlider.Minimum, YSlider.Maximum);
+            RotationSlider.Value = Math.Clamp(state.Rotation, RotationSlider.Minimum, RotationSlider.Maximum);
+            UpdatePlacementPreview();
+
+            ComposerStatusText.Text = "Saved Photo Studio project restored.";
+            ComposerDetailText.Text = state.SavedAt == default
+                ? _job.JobNumber
+                : $"Last saved {state.SavedAt:g}";
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            _restoringProject = false;
+        }
     }
 
     private void SaveJpg_Click(object sender, RoutedEventArgs e) => SaveFinishedPhoto("jpg");
@@ -257,7 +358,7 @@ public partial class ComposerWindow : Window
             return;
         }
 
-        if (_selectedBackground is null || !File.Exists(_selectedBackground.FilePath))
+        if (_selectedBackground is null || _backgroundBitmap is null || !File.Exists(_selectedBackground.FilePath))
         {
             MessageBox.Show("Choose a background first.", "Automotive Photo Studio", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
@@ -265,6 +366,7 @@ public partial class ComposerWindow : Window
 
         try
         {
+            SaveProject(showConfirmation: false);
             var outputFolder = GetFinishedFolder();
             var outputPath = Path.Combine(outputFolder, $"{_job.JobNumber}_Finished.{extension}");
             var render = RenderFinishedFrame();
@@ -302,13 +404,12 @@ public partial class ComposerWindow : Window
 
     private RenderTargetBitmap RenderFinishedFrame()
     {
-        var background = LoadBitmap(_selectedBackground!.FilePath);
         var previewToOutput = OutputWidth / PreviewWidth;
-
         var drawingVisual = new DrawingVisual();
+
         using (var dc = drawingVisual.RenderOpen())
         {
-            var backgroundBrush = new ImageBrush(background)
+            var backgroundBrush = new ImageBrush(_backgroundBitmap!)
             {
                 Stretch = Stretch.UniformToFill,
                 AlignmentX = AlignmentX.Center,
@@ -351,14 +452,92 @@ public partial class ComposerWindow : Window
         return folder;
     }
 
+    private string GetProjectFolder()
+    {
+        var folder = Path.Combine(_activeEvent.RootFolder, "StudioProjects");
+        Directory.CreateDirectory(folder);
+        return folder;
+    }
+
     private static BitmapSource LoadBitmap(string path)
     {
-        var bitmap = new BitmapImage();
-        bitmap.BeginInit();
-        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-        bitmap.UriSource = new Uri(path, UriKind.Absolute);
-        bitmap.EndInit();
-        bitmap.Freeze();
-        return bitmap;
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+        var frame = decoder.Frames[0];
+        frame.Freeze();
+        return frame;
+    }
+
+    private static BitmapSource CropToVisibleAlpha(BitmapSource source)
+    {
+        try
+        {
+            BitmapSource bgra = source;
+            if (source.Format != PixelFormats.Bgra32 && source.Format != PixelFormats.Pbgra32)
+            {
+                var converted = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+                converted.Freeze();
+                bgra = converted;
+            }
+
+            var width = bgra.PixelWidth;
+            var height = bgra.PixelHeight;
+            var stride = width * 4;
+            var pixels = new byte[stride * height];
+            bgra.CopyPixels(pixels, stride, 0);
+
+            var minX = width;
+            var minY = height;
+            var maxX = -1;
+            var maxY = -1;
+
+            for (var y = 0; y < height; y++)
+            {
+                var row = y * stride;
+                for (var x = 0; x < width; x++)
+                {
+                    if (pixels[row + x * 4 + 3] <= 8)
+                        continue;
+
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+
+            if (maxX < minX || maxY < minY)
+                return source;
+
+            var visibleWidth = maxX - minX + 1;
+            var visibleHeight = maxY - minY + 1;
+            var padX = Math.Max(4, (int)(visibleWidth * 0.02));
+            var padY = Math.Max(4, (int)(visibleHeight * 0.03));
+            minX = Math.Max(0, minX - padX);
+            minY = Math.Max(0, minY - padY);
+            maxX = Math.Min(width - 1, maxX + padX);
+            maxY = Math.Min(height - 1, maxY + padY);
+
+            var cropped = new CroppedBitmap(bgra, new Int32Rect(minX, minY, maxX - minX + 1, maxY - minY + 1));
+            cropped.Freeze();
+            return cropped;
+        }
+        catch
+        {
+            return source;
+        }
+    }
+
+    private sealed class PhotoStudioProjectState
+    {
+        public long JobId { get; set; }
+        public string JobNumber { get; set; } = string.Empty;
+        public long BackgroundId { get; set; }
+        public string BackgroundName { get; set; } = string.Empty;
+        public double Scale { get; set; } = 100;
+        public double X { get; set; }
+        public double Y { get; set; } = 90;
+        public double Rotation { get; set; }
+        public DateTime SavedAt { get; set; }
     }
 }
