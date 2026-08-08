@@ -12,13 +12,12 @@ public partial class ComposerWindow
     private BitmapSource? _realismBaseBitmap;
     private DispatcherTimer? _realismDebounceTimer;
     private bool _restoringRealismState;
+    private bool _realismRefreshBasePending;
     private Color _groundBounceColor = Color.FromRgb(128, 128, 128);
     private Color _skyFillColor = Color.FromRgb(128, 128, 128);
 
     private void ComposerWindow_Phase7Loaded(object sender, RoutedEventArgs e)
     {
-        // Preserve Module 6.1 initialization first; realism always works from the
-        // halo-corrected vehicle, never from the raw extraction.
         ComposerWindow_Loaded(sender, e);
 
         if (_vehicleBitmap is null)
@@ -48,8 +47,6 @@ public partial class ComposerWindow
         if (!_initialized)
             return;
 
-        // Halo Inspector debounces at 180 ms. Waiting slightly longer ensures
-        // realism is rebuilt from the freshly halo-corrected bitmap.
         QueueRealismUpdate(340, refreshBaseFromVehicle: true);
     }
 
@@ -81,7 +78,7 @@ public partial class ComposerWindow
         _realismDebounceTimer ??= new DispatcherTimer();
         _realismDebounceTimer.Stop();
         _realismDebounceTimer.Tick -= RealismDebounceTimer_Tick;
-        _realismDebounceTimer.Tag = refreshBaseFromVehicle;
+        _realismRefreshBasePending = refreshBaseFromVehicle;
         _realismDebounceTimer.Interval = TimeSpan.FromMilliseconds(delayMs);
         _realismDebounceTimer.Tick += RealismDebounceTimer_Tick;
         _realismDebounceTimer.Start();
@@ -93,9 +90,9 @@ public partial class ComposerWindow
             return;
 
         _realismDebounceTimer.Stop();
-        var refreshBase = _realismDebounceTimer.Tag is true;
-        if (refreshBase && _vehicleBitmap is not null)
+        if (_realismRefreshBasePending && _vehicleBitmap is not null)
             _realismBaseBitmap = _vehicleBitmap;
+        _realismRefreshBasePending = false;
 
         ApplyRealismAdjustments();
         SaveRealismState();
@@ -122,8 +119,6 @@ public partial class ComposerWindow
             _restoringRealismState = true;
             RealismEnabledCheckBox.IsChecked = true;
 
-            // Conservative corrections are intentional. Auto Match is designed to
-            // produce a believable starting point, not a dramatic filter.
             var brightnessDelta = (scene.Luminance - car.Luminance) * 0.30;
             RealismBrightnessSlider.Value = Math.Clamp(brightnessDelta, -22, 22);
 
@@ -295,11 +290,9 @@ public partial class ComposerWindow
                     g = 128 + (g - 128) * contrast;
                     b = 128 + (b - 128) * contrast;
 
-                    // Positive temperature warms; negative cools.
                     r += temperature * 0.78;
                     b -= temperature * 0.78;
 
-                    // Positive tint moves toward magenta, negative toward green.
                     r += tint * 0.28;
                     b += tint * 0.28;
                     g -= tint * 0.44;
@@ -528,16 +521,7 @@ public partial class ComposerWindow
         var avgG = sumG / count;
         var avgB = sumB / count;
         var color = Color.FromRgb(ClampByte(avgR), ClampByte(avgG), ClampByte(avgB));
-        return new ImageAnalysis(
-            meanLum,
-            Math.Sqrt(variance),
-            avgR,
-            avgG,
-            avgB,
-            sumSat / count,
-            detail / count,
-            noise / count,
-            color);
+        return new ImageAnalysis(meanLum, Math.Sqrt(variance), avgR, avgG, avgB, sumSat / count, detail / count, noise / count, color);
     }
 
     private static double ColorDistanceFromNeutral(Color color)
@@ -626,16 +610,7 @@ public partial class ComposerWindow
 
     private string GetRealismStatePath() => Path.Combine(GetProjectFolder(), _job.JobNumber + ".realism.json");
 
-    private readonly record struct ImageAnalysis(
-        double Luminance,
-        double Contrast,
-        double Red,
-        double Green,
-        double Blue,
-        double Saturation,
-        double Detail,
-        double NoiseEstimate,
-        Color AverageColor);
+    private readonly record struct ImageAnalysis(double Luminance, double Contrast, double Red, double Green, double Blue, double Saturation, double Detail, double NoiseEstimate, Color AverageColor);
 
     private sealed class RealismState
     {
